@@ -6,6 +6,11 @@ __pycache__/
 # C extensions
 *.so
 
+# Data
+plots/
+training2017/
+
+
 # Distribution / packaging
 .Python
 env/
