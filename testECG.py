@@ -2,7 +2,12 @@ import csv
 import os
 
 import matplotlib.pyplot as plt
+import numpy as np
 import scipy.io
+from matplotlib import pyplot
+
+import peakutils
+from peakutils.plot import plot as pplot
 
 
 def read_lable_dict():
@@ -39,7 +44,27 @@ for filename in os.listdir('training2017'):
         label_dict = read_lable_dict()
         label = label_dict[name]
         mat1 = scipy.io.loadmat('training2017/' + filename)
-        plot_line_graph([mat1['val'][0]], [label], name)
+        # plot_line_graph([mat1['val'][0]], [label], name)
+        data = mat1['val'][0]
+
+        # centers = (30.5, 72.3)
+        length = len(data)
+        x = np.linspace(0, length - 1, length)
+        y = data  # (peakutils.gaussian(x, 5, centers[0], 3) +
+        # peakutils.gaussian(x, 7, centers[1], 10) +
+        # numpy.random.rand(x.size))
+
+        indexes = peakutils.indexes(y, thres=0.45, min_dist=30)
+        indexes = np.append(indexes, peakutils.indexes(-y, thres=0.45, min_dist=30))
+        # print(indexes)
+        # print(x[indexes], y[indexes])
+        pyplot.figure(figsize=(10, 6))
+        pplot(x, y, indexes)
+        pyplot.title('First estimate')
+
+        break
+
+
 
 #
 # mat2 = scipy.io.loadmat('A00002.mat')
