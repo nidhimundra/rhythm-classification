@@ -5,8 +5,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io
 from matplotlib import pyplot
+from scipy import signal
 
-import peakutils
 from peakutils.plot import plot as pplot
 
 
@@ -54,15 +54,19 @@ for filename in os.listdir('training2017'):
         # peakutils.gaussian(x, 7, centers[1], 10) +
         # numpy.random.rand(x.size))
 
-        indexes = peakutils.indexes(y, thres=0.45, min_dist=30)
-        indexes = np.append(indexes, peakutils.indexes(-y, thres=0.45, min_dist=30))
+        # indexes = peakutils.indexes(y, thres=0.46, min_dist=30)
+        # indexes = peakutils.gaussian_fit(x,y, center_only = False)
+        # indexes = peakutils.interpolate(x,y)#, func= peakutils.gaussian_fit(x,y))
+        # indexes = np.append(indexes, peakutils.indexes(-y, thres=0.45, min_dist=30))
         # print(indexes)
         # print(x[indexes], y[indexes])
+
+        indexes = signal.find_peaks_cwt(y, np.arange(1, 10))
         pyplot.figure(figsize=(10, 6))
         pplot(x, y, indexes)
         pyplot.title('First estimate')
 
-        break
+        print "hi"
 
 
 
