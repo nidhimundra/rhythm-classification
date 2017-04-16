@@ -8,7 +8,7 @@ from peakutils.plot import plot as pplot
 
 class HeartBeat:
     def __init__(self, path, filename):
-        self.hrw = 2.25
+        self.hrw = 6.75
         self.fs = 300
         self.measures = dict()
         self.path = path
@@ -17,13 +17,26 @@ class HeartBeat:
 
     def get_data(self):
         mat = loadmat(self.path + self.filename)
-        return pd.DataFrame({'val': mat['val'][0]})
+        y = mat['val'][0]
+
+        minus = 0
+        plus = 0
+
+        for i in y:
+            if i > 300:
+                plus += 1
+            if i < -300:
+                minus += 1
+        if minus > plus:
+            y = -y
+
+        return pd.DataFrame({'val': y})
 
     def roll_mean(self):
         mov_avg = pd.rolling_mean(self.dataset.val, window=int(self.hrw * self.fs))
         avg_hr = (np.mean(self.dataset.val))
         mov_avg = [avg_hr if math.isnan(x) else x for x in mov_avg]
-        mov_avg = [x * 1.2 for x in mov_avg]
+        mov_avg = [x * 15 for x in mov_avg]
         self.dataset['rollingmean'] = mov_avg
 
     def detect_peaks(self):
@@ -61,21 +74,45 @@ class HeartBeat:
         self.measures['bpm'] = 60000 / np.mean(RR_list)
 
     def plot(self):
-        peaklist = self.measures['peaklist']
-        ybeat = self.measures['ybeat']
-        pyplot.close("all")
-        pyplot.figure(figsize=(10, 6))
+
+        peaks = self.measures['peaklist']
         length = len(self.dataset.val)
         x = np.linspace(0, length - 1, length)
-        pplot(x, self.dataset.val, peaklist)
-        pyplot.title("HeartBeat")
-        # pyplot.plot(mov_avg, color='green')  # Plot moving average
+
+        pyplot.close("all")
+        pyplot.figure(figsize=(10, 6))
+        pplot(x, self.dataset.val, peaks)
+        pyplot.title("R Peaks of ECG")
+
         pyplot.show()
+
+    def peak_cleaning(self):
+
+        peaklist = self.measures['peaklist']
+        ybeat = self.measures['ybeat']
+
+        cleaned_peak_list = []
+        list_pos = 0
+
+        mov_max = pd.rolling_max(pd.DataFrame(data=ybeat), window=2)
+        mean = np.mean(ybeat)
+        median = np.median(ybeat)
+        avg = min(mean, median)
+        mov_max = [avg if math.isnan(x) else x for x in pd.Series(mov_max[0])]
+
+        for y in ybeat:
+            rolling_max = mov_max[list_pos]
+            if y < avg / 3:
+                pass
+            elif (y > rolling_max / 2) or (y > 2 * avg / 3):
+                cleaned_peak_list.append(peaklist[list_pos])
+            list_pos += 1
+
+        self.measures['peaklist'] = cleaned_peak_list
+        self.measures['ybeat'] = [self.dataset.val[x] for x in cleaned_peak_list]
 
     def process(self):
         self.roll_mean()
         self.detect_peaks()
-        self.calc_RR()
-        self.calc_bpm()
+        self.peak_cleaning()
         self.plot()
-        print self.measures
