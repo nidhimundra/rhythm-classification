@@ -104,7 +104,7 @@ class HeartBeat:
             rolling_max = mov_max[list_pos]
             if y < avg / 3:
                 pass
-            elif (y > rolling_max / 2) or (y > 2 * avg / 3):
+            elif (y > rolling_max / 2) or (y > 0.7 * avg):
                 cleaned_peak_list.append(peaklist[list_pos])
             list_pos += 1
 
