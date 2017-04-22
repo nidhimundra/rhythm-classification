@@ -1,14 +1,16 @@
-import pandas as pd
-import numpy as np
 import math
-from scipy.io import loadmat
+
+import numpy as np
+import pandas as pd
 from matplotlib import pyplot
+from scipy.io import loadmat
+
 from peakutils.plot import plot as pplot
 
 
 class HeartBeat:
     def __init__(self, path, filename):
-        self.hrw = 2.25
+        self.hrw = 6.75
         self.fs = 300
         self.measures = dict()
         self.path = path
@@ -17,13 +19,24 @@ class HeartBeat:
 
     def get_data(self):
         mat = loadmat(self.path + self.filename)
-        return pd.DataFrame({'val': mat['val'][0]})
+        y = mat['val'][0]
+        minus = 0
+        plus = 0
+        for i in y:
+            if i > 300:
+                plus += 1
+            if i < -300:
+                minus += 1
+        if minus > plus:
+            y = -y
+
+        return pd.DataFrame({'val': y})
 
     def roll_mean(self):
         mov_avg = pd.rolling_mean(self.dataset.val, window=int(self.hrw * self.fs))
         avg_hr = (np.mean(self.dataset.val))
         mov_avg = [avg_hr if math.isnan(x) else x for x in mov_avg]
-        mov_avg = [x * 1.2 for x in mov_avg]
+        mov_avg = [x * 15 for x in mov_avg]
         self.dataset['rollingmean'] = mov_avg
 
     def detect_peaks(self):
@@ -51,7 +64,7 @@ class HeartBeat:
         cnt = 0
         while (len(peaklist) - 1) > cnt:
             RR_interval = (peaklist[cnt + 1] - peaklist[cnt])
-            ms_dist = ((RR_interval / self.fs) * 1000.0)
+            ms_dist = ((RR_interval / float(self.fs)) * 1000.0)
             RR_list.append(ms_dist)
             cnt += 1
         self.measures['RR_list'] = RR_list
@@ -76,6 +89,22 @@ class HeartBeat:
         self.roll_mean()
         self.detect_peaks()
         self.calc_RR()
+        # self.elim_outliers()
         self.calc_bpm()
         self.plot()
         print self.measures
+
+    def elim_outliers(self):
+        rr_list = self.measures['RR_list']
+        std = np.std(rr_list)
+        mean = np.median(rr_list)
+
+        outliers = [0]
+        data = self.dataset['val']
+        new_indexes = []
+        for i in rr_list:
+            if (self.dataset['val'][i] < mean + (2 * std)) and self.dataset['val'][
+                i] > 200:  # and (y[i] > mean - (4* std)) :#
+                new_indexes.append(i)
+            elif self.dataset['val'][i] > 200:
+                outliers.append(i)
