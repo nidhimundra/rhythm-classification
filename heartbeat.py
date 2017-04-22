@@ -1,7 +1,7 @@
-import math
-
-import numpy as np
 import pandas as pd
+import numpy as np
+import math
+from scipy.io import loadmat
 from matplotlib import pyplot
 from scipy.io import loadmat
 
@@ -20,8 +20,10 @@ class HeartBeat:
     def get_data(self):
         mat = loadmat(self.path + self.filename)
         y = mat['val'][0]
+
         minus = 0
         plus = 0
+
         for i in y:
             if i > 300:
                 plus += 1
@@ -64,7 +66,7 @@ class HeartBeat:
         cnt = 0
         while (len(peaklist) - 1) > cnt:
             RR_interval = (peaklist[cnt + 1] - peaklist[cnt])
-            ms_dist = ((RR_interval / float(self.fs)) * 1000.0)
+            ms_dist = ((RR_interval / self.fs) * 1000.0)
             RR_list.append(ms_dist)
             cnt += 1
         self.measures['RR_list'] = RR_list
@@ -74,37 +76,46 @@ class HeartBeat:
         self.measures['bpm'] = 60000 / np.mean(RR_list)
 
     def plot(self):
-        peaklist = self.measures['peaklist']
-        ybeat = self.measures['ybeat']
-        pyplot.close("all")
-        pyplot.figure(figsize=(10, 6))
+
+        peaks = self.measures['peaklist']
         length = len(self.dataset.val)
         x = np.linspace(0, length - 1, length)
-        pplot(x, self.dataset.val, peaklist)
-        pyplot.title("HeartBeat")
-        # pyplot.plot(mov_avg, color='green')  # Plot moving average
+
+        pyplot.close("all")
+        pyplot.figure(figsize=(10, 6))
+        pplot(x, self.dataset.val, peaks)
+        pyplot.title("R Peaks of ECG")
+
         pyplot.show()
+
+    def peak_cleaning(self):
+
+        peaklist = self.measures['peaklist']
+        ybeat = self.measures['ybeat']
+
+        cleaned_peak_list = []
+        list_pos = 0
+
+        mov_max = pd.rolling_max(pd.DataFrame(data=ybeat), window=2)
+        mean = np.mean(ybeat)
+        median = np.median(ybeat)
+        avg = min(mean, median)
+        mov_max = [avg if math.isnan(x) else x for x in pd.Series(mov_max[0])]
+
+        for y in ybeat:
+            rolling_max = mov_max[list_pos]
+            if y < avg / 3:
+                pass
+            elif (y > rolling_max / 2) or (y > 2 * avg / 3):
+                cleaned_peak_list.append(peaklist[list_pos])
+            list_pos += 1
+
+        self.measures['peaklist'] = cleaned_peak_list
+        self.measures['ybeat'] = [self.dataset.val[x] for x in cleaned_peak_list]
 
     def process(self):
         self.roll_mean()
         self.detect_peaks()
-        self.calc_RR()
-        # self.elim_outliers()
-        self.calc_bpm()
+        self.peak_cleaning()
         self.plot()
         print self.measures
-
-    def elim_outliers(self):
-        rr_list = self.measures['RR_list']
-        std = np.std(rr_list)
-        mean = np.median(rr_list)
-
-        outliers = [0]
-        data = self.dataset['val']
-        new_indexes = []
-        for i in rr_list:
-            if (self.dataset['val'][i] < mean + (2 * std)) and self.dataset['val'][
-                i] > 200:  # and (y[i] > mean - (4* std)) :#
-                new_indexes.append(i)
-            elif self.dataset['val'][i] > 200:
-                outliers.append(i)
