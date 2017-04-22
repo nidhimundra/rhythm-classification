@@ -26,7 +26,8 @@ for filename in os.listdir('training2017'):
 
         rPeaks = RPeakFinder(data)
         rPeaks.plot("original")
-        rPeaks.find_outliers()
+        # rPeaks.find_outliers()
+        rPeaks.r_detection_outlier_removal()
         # rPeaks.remove_outliers()
         rPeaks.plot("Outliers removed")
 
