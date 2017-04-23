@@ -3,6 +3,8 @@ import numpy as np
 import math
 from scipy.io import loadmat
 from matplotlib import pyplot
+from scipy.io import loadmat
+
 from peakutils.plot import plot as pplot
 
 
@@ -116,3 +118,4 @@ class HeartBeat:
         self.detect_peaks()
         self.peak_cleaning()
         self.plot()
+        print self.measures
