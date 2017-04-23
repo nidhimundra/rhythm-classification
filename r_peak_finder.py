@@ -18,173 +18,33 @@ class RPeakFinder:
         self.r_peaks = copy.copy(self.peaks)
 
     def __flip_data__(self, data):
-        minus = 0
-        plus = 0
-        for i in data:
-            if i > 200:
-                plus += 1
-            if i < -200:
-                minus += 1
-        if minus > plus:
-            return -data
-        else:
+        # minus = 0
+        # plus = 0
+        # for i in data:
+        #     if i > 200:
+        #         plus += 1
+        #     if i < -200:
+        #         minus += 1
+        # if minus > plus:
+        #     return -data
+        # else:
+        #     return data
+        # data_sum = 0
+        # for point in data:
+        #     if point > -200 and point < 200:
+        #         data_sum += point
+
+        data_sum = np.sum(data)
+        if data_sum >= 0:
             return data
+        else:
+            return -data
+
+
+
 
     def __initial_peaks__(self):
         return peakutils.indexes(self.data, thres=0.46, min_dist=30)
-
-    def get_r_peaks(self):
-        peaks = self.__initial_peaks__()
-
-        all_peaks_values = []
-        for i in peaks:
-            all_peaks_values.append(self.data[i])
-
-        try:
-            std_all = np.std(all_peaks_values)
-            median_all = np.median(all_peaks_values)
-            max_all = np.max(all_peaks_values)
-        except:
-            std_all = 0
-            median_all = 0
-            max_all = 0
-
-        x = np.array([all_peaks_values]).T
-
-        try:
-            # k=1
-            r_k = None
-            r_k_center = 0
-            std_k = 99
-            for k in range(1, 4):
-                kmeans = KMeans(n_clusters=k)
-                prediction = kmeans.fit_predict(x)
-
-                stats = {}
-                for i in range(0, len(all_peaks_values)):
-                    if prediction[i] not in stats:
-                        stats[prediction[i]] = {}
-                        stats[prediction[i]]["values"] = []
-                        stats[prediction[i]]["count"] = 0
-                    stats[prediction[i]]["count"] += 1
-                    stats[prediction[i]]["values"].append(all_peaks_values[i])
-
-                for key, value in stats.iteritems():
-                    stats[key]["std"] = np.std(value["values"])
-                    stats[key]["mean"] = kmeans.cluster_centers_[key]
-                    std_perc = stats[key]["std"] / stats[key]["mean"]
-                    a_first_left = float(stats[key]["count"]) / (len(all_peaks_values))
-                    a_first_right = 1.0 / (2 * k)
-                    a_first = (float(stats[key]["count"]) / (len(all_peaks_values)) > (1.0 / (2 * k)))
-                    a_second = stats[key]["mean"] > r_k_center
-                    a_third = stats[key]["std"] / stats[key]["mean"] < 1.2 * std_k
-
-                    print"Her"
-                    if (float(stats[key]["count"]) / (len(all_peaks_values)) > (1.0 / (k + 1))) and \
-                                    stats[key]["mean"] > r_k_center and stats[key]["std"] / stats[key][
-                        "mean"] < 1.2 * std_k:
-                        r_k = key
-                        median_all = stats[key]["mean"]
-                        std_k = stats[key]["std"] / stats[key]["mean"]
-
-            new_r_peaks = []
-
-            # for i in range(0,len(prediction)):
-            #     if prediction[i] == r_k:
-            #         new_r_peaks.append(all_peaks_values[i])
-            # self.r_peaks = new_r_peaks
-
-
-
-
-
-        except:
-            print"to less"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        #
-        outliers = [0]
-        # r_peaks = []
-        other_peaks = []
-
-        # find NOT outliers but not R Peaks:
-
-        # for i in peaks:
-        #     if ((self.data[i] < 0.5 * max_all)):  # and self.data[i] < 250):
-        #         # if ((self.data[i] < max_all - (1 * std_all))):  # and self.data[i] < 250):
-        #         # if(self.data[i] < 350):
-        #         other_peaks.append(i)
-
-        for i in peaks:
-            if ((self.data[i] < 0.5 * median_all)):  # - (0.5 * std_all))):# and self.data[i] < 250):
-                # if ((self.data[i] < 0.7 *median_all )):#- (0.5 * std_all))):# and self.data[i] < 250):
-                # if ((self.data[i] < median_all - (0.5 * std_all))):# and self.data[i] < 250):
-                # if(self.data[i] < 350):
-                other_peaks.append(i)
-            # elif (previous != None and i - previous < 50):
-            #     other_peaks.append(i)
-
-
-            previous = i
-
-        # eliminate non other_peaks from peaks
-        self.r_peaks = peaks
-        top_peak_values = []
-        for i in peaks:
-            if i in other_peaks:
-                self.r_peaks = np.delete(self.r_peaks, np.argwhere(self.r_peaks == i))
-            else:
-                top_peak_values.append(self.data[i])
-
-        previous = None
-        distances = []
-        for i in self.peaks:
-            if previous != None:
-                distances.append(i - previous)
-                previous = i
-
-        avg_distance = np.mean(distances)
-
-        previous = None
-        for i in self.r_peaks:
-            # if ((self.data[i] < 0.5 * median_all)):  # - (0.5 * std_all))):# and self.data[i] < 250):
-            #     # if ((self.data[i] < 0.7 *median_all )):#- (0.5 * std_all))):# and self.data[i] < 250):
-            #     # if ((self.data[i] < median_all - (0.5 * std_all))):# and self.data[i] < 250):
-            #     # if(self.data[i] < 350):
-            #     other_peaks.append(i)
-            if (previous != None and i - previous < avg_distance):
-                other_peaks.append(i)
-
-            previous = i
-
-            # eliminate non other_peaks from peaks
-        self.r_peaks = peaks
-        top_peak_values = []
-        for i in peaks:
-            if i in other_peaks:
-                self.r_peaks = np.delete(self.r_peaks, np.argwhere(self.r_peaks == i))
-            else:
-                top_peak_values.append(self.data[i])
-
-        return peaks, top_peak_values
 
     def r_detection_outlier_removal(self):
 
@@ -359,7 +219,7 @@ class RPeakFinder:
                 max_distance = np.max(distances)
                 min_distance = np.min(distances)
                 std_distance = np.std(distances)
-                print "STD DISTANCE = " + str(std_distance)
+                # print "STD DISTANCE = " + str(std_distance)
                 if (std_distance > 90):
 
                     stats = self.get_kmeans_stats(distances, x, 2)
@@ -388,6 +248,28 @@ class RPeakFinder:
                     self.r_peaks = np.delete(self.r_peaks, np.argwhere(self.r_peaks == i))
                 else:
                     top_peak_values.append(self.data[i])
+
+        for i in range(0, len(self.r_peaks)):
+            length_data = len(self.data)
+            if self.r_peaks[i] == 0:
+                left_of_i = 0
+            else:
+                left_of_i = self.r_peaks[i] - 1
+
+            if self.r_peaks[i] == len(self.data) - 1:
+                right_of_i = self.r_peaks[i]
+            else:
+                right_of_i = self.r_peaks[i] + 1
+
+            value_left_of_i = self.data[left_of_i]
+            value_of_i = self.data[self.r_peaks[i]]
+            value_right_of_i = self.data[right_of_i]
+
+            if value_left_of_i > value_of_i:
+                self.r_peaks[i] = left_of_i
+            if value_right_of_i > value_of_i:
+                self.r_peaks[i] = right_of_i
+
 
 
 
@@ -493,3 +375,265 @@ class RPeakFinder:
         pyplot.figure(figsize=(10, 6))
         pplot(x, self.data, self.r_peaks)
         pyplot.title(title)
+
+    def get_data_between_rs(self, left_r, right_r):
+        new_data = []
+        for i in range(left_r, right_r + 1):
+            new_data.append(self.data[i])
+
+        return new_data
+
+    def feature_generation(self):
+        feature_matrix = []
+        distances = []
+        r_peaks = []
+        for i in range(0, len(self.r_peaks) - 1):
+            try:
+                distance = self.r_peaks[i + 1] - self.r_peaks[i]
+                new_data = self.get_data_between_rs(self.r_peaks[i], self.r_peaks[i + 1])
+                distances.append(distance)
+                r_peaks.append(new_data[0])
+                s_len = int(round((1.0 / 13) * distance))
+                st_len = int(round((2.0 / 13) * distance)) + s_len
+                t_len = int(round((4.0 / 13) * distance)) + st_len
+                u_len = int(round((1.0 / 13) * distance)) + t_len
+                p_len = int(round((2.0 / 13) * distance)) + u_len
+                pr_len = int(round((2.0 / 13) * distance)) + p_len
+                q_len = len(new_data)
+
+                peak_distances = [0, s_len, st_len, t_len, u_len, p_len, pr_len, q_len]
+                inner_features = []
+                for j in range(0, len(peak_distances) - 1):
+                    # for j in range(peak_distances[i], peak_distances[i+1]+1):
+
+                    subrange = range(peak_distances[j], peak_distances[j + 1])
+                    sub_data = [new_data[k] for k in subrange]
+                    maxi = np.max(sub_data)
+                    mini = np.min(sub_data)
+                    mean = np.mean(sub_data)
+                    std = np.std(sub_data)
+                    inner_features.append(maxi)
+                    inner_features.append(mini)
+                    inner_features.append(mean)
+                    inner_features.append(std)
+            except:
+                inner_features.append(0.0)
+                inner_features.append(0.0)
+                inner_features.append(0.0)
+                inner_features.append(0.0)
+            feature_matrix.append(inner_features)
+        r_peaks.append(self.data[self.r_peaks[-1]])
+
+        features = []
+        try:
+            features.append(np.max(r_peaks))
+        except:
+            features.append(0.0)
+        try:
+            features.append(np.min(r_peaks))
+        except:
+            features.append(0.0)
+        try:
+            features.append(np.mean(r_peaks))
+        except:
+            features.append(0.0)
+        try:
+            features.append(np.std(r_peaks))
+        except:
+            features.append(0.0)
+
+        try:
+            features.append(np.max(distances))
+        except:
+            features.append(0.0)
+        try:
+            features.append(np.min(distances))
+        except:
+            features.append(0.0)
+        try:
+            features.append(np.mean(distances))
+        except:
+            features.append(0.0)
+        try:
+            features.append(np.std(distances))
+        except:
+            features.append(0.0)
+
+        feature_matrix = np.array(feature_matrix)
+        try:
+            matrix_length = len(feature_matrix[0])
+        except:
+            matrix_length = 1
+        for i in range(0, matrix_length):
+            # column = feature_matrix[:,i]
+            try:
+                features.append(np.max(feature_matrix[:, i]))
+            except:
+                features.append(0.0)
+            try:
+                features.append(np.min(feature_matrix[:, i]))
+            except:
+                features.append(0.0)
+            try:
+                features.append(np.mean(feature_matrix[:, i]))
+            except:
+                features.append(0.0)
+            try:
+                features.append(np.std(feature_matrix[:, i]))
+            except:
+                features.append(0.0)
+
+        return features
+
+# def get_r_peaks(self):
+#     peaks = self.__initial_peaks__()
+#
+#     all_peaks_values = []
+#     for i in peaks:
+#         all_peaks_values.append(self.data[i])
+#
+#     try:
+#         std_all = np.std(all_peaks_values)
+#         median_all = np.median(all_peaks_values)
+#         max_all = np.max(all_peaks_values)
+#     except:
+#         std_all = 0
+#         median_all = 0
+#         max_all = 0
+#
+#     x = np.array([all_peaks_values]).T
+#
+#     try:
+#         # k=1
+#         r_k = None
+#         r_k_center = 0
+#         std_k = 99
+#         for k in range(1, 4):
+#             kmeans = KMeans(n_clusters=k)
+#             prediction = kmeans.fit_predict(x)
+#
+#             stats = {}
+#             for i in range(0, len(all_peaks_values)):
+#                 if prediction[i] not in stats:
+#                     stats[prediction[i]] = {}
+#                     stats[prediction[i]]["values"] = []
+#                     stats[prediction[i]]["count"] = 0
+#                 stats[prediction[i]]["count"] += 1
+#                 stats[prediction[i]]["values"].append(all_peaks_values[i])
+#
+#             for key, value in stats.iteritems():
+#                 stats[key]["std"] = np.std(value["values"])
+#                 stats[key]["mean"] = kmeans.cluster_centers_[key]
+#                 std_perc = stats[key]["std"] / stats[key]["mean"]
+#                 a_first_left = float(stats[key]["count"]) / (len(all_peaks_values))
+#                 a_first_right = 1.0 / (2 * k)
+#                 a_first = (float(stats[key]["count"]) / (len(all_peaks_values)) > (1.0 / (2 * k)))
+#                 a_second = stats[key]["mean"] > r_k_center
+#                 a_third = stats[key]["std"] / stats[key]["mean"] < 1.2 * std_k
+#
+#                 print"Her"
+#                 if (float(stats[key]["count"]) / (len(all_peaks_values)) > (1.0 / (k + 1))) and \
+#                                 stats[key]["mean"] > r_k_center and stats[key]["std"] / stats[key][
+#                     "mean"] < 1.2 * std_k:
+#                     r_k = key
+#                     median_all = stats[key]["mean"]
+#                     std_k = stats[key]["std"] / stats[key]["mean"]
+#
+#         new_r_peaks = []
+#
+#         # for i in range(0,len(prediction)):
+#         #     if prediction[i] == r_k:
+#         #         new_r_peaks.append(all_peaks_values[i])
+#         # self.r_peaks = new_r_peaks
+#
+#
+#
+#
+#
+#     except:
+#         print"to less"
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#
+#     #
+#     outliers = [0]
+#     # r_peaks = []
+#     other_peaks = []
+#
+#     # find NOT outliers but not R Peaks:
+#
+#     # for i in peaks:
+#     #     if ((self.data[i] < 0.5 * max_all)):  # and self.data[i] < 250):
+#     #         # if ((self.data[i] < max_all - (1 * std_all))):  # and self.data[i] < 250):
+#     #         # if(self.data[i] < 350):
+#     #         other_peaks.append(i)
+#
+#     for i in peaks:
+#         if ((self.data[i] < 0.5 * median_all)):  # - (0.5 * std_all))):# and self.data[i] < 250):
+#             # if ((self.data[i] < 0.7 *median_all )):#- (0.5 * std_all))):# and self.data[i] < 250):
+#             # if ((self.data[i] < median_all - (0.5 * std_all))):# and self.data[i] < 250):
+#             # if(self.data[i] < 350):
+#             other_peaks.append(i)
+#         # elif (previous != None and i - previous < 50):
+#         #     other_peaks.append(i)
+#
+#
+#         previous = i
+#
+#     # eliminate non other_peaks from peaks
+#     self.r_peaks = peaks
+#     top_peak_values = []
+#     for i in peaks:
+#         if i in other_peaks:
+#             self.r_peaks = np.delete(self.r_peaks, np.argwhere(self.r_peaks == i))
+#         else:
+#             top_peak_values.append(self.data[i])
+#
+#     previous = None
+#     distances = []
+#     for i in self.peaks:
+#         if previous != None:
+#             distances.append(i - previous)
+#             previous = i
+#
+#     avg_distance = np.mean(distances)
+#
+#     previous = None
+#     for i in self.r_peaks:
+#         # if ((self.data[i] < 0.5 * median_all)):  # - (0.5 * std_all))):# and self.data[i] < 250):
+#         #     # if ((self.data[i] < 0.7 *median_all )):#- (0.5 * std_all))):# and self.data[i] < 250):
+#         #     # if ((self.data[i] < median_all - (0.5 * std_all))):# and self.data[i] < 250):
+#         #     # if(self.data[i] < 350):
+#         #     other_peaks.append(i)
+#         if (previous != None and i - previous < avg_distance):
+#             other_peaks.append(i)
+#
+#         previous = i
+#
+#         # eliminate non other_peaks from peaks
+#     self.r_peaks = peaks
+#     top_peak_values = []
+#     for i in peaks:
+#         if i in other_peaks:
+#             self.r_peaks = np.delete(self.r_peaks, np.argwhere(self.r_peaks == i))
+#         else:
+#             top_peak_values.append(self.data[i])
+#
+#     return peaks, top_peak_values
