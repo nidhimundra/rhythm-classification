@@ -34,6 +34,8 @@ class RPeakFinder:
         #     if point > -200 and point < 200:
         #         data_sum += point
 
+
+
         data_sum = np.sum(data)
         if data_sum >= 0:
             return data
@@ -391,6 +393,7 @@ class RPeakFinder:
             try:
                 distance = self.r_peaks[i + 1] - self.r_peaks[i]
                 new_data = self.get_data_between_rs(self.r_peaks[i], self.r_peaks[i + 1])
+
                 distances.append(distance)
                 r_peaks.append(new_data[0])
                 s_len = int(round((1.0 / 13) * distance))

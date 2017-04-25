@@ -81,7 +81,7 @@ with open('labels.pickle', 'wb') as handle:
 #
 # new_features = normalize(new_features)
 # X_train, X_test, y_train, y_test = train_test_split(new_features, new_labels , test_size=0.2)
-#
+# #
 #
 # with open('X_train.pickle', 'wb') as handle:
 #     pickle.dump(X_train, handle, protocol=pickle.HIGHEST_PROTOCOL)
