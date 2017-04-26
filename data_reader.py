@@ -1,3 +1,7 @@
+"""
+ Created by Nidhi Mundra on 25/04/17.
+"""
+
 import csv
 import scipy.io
 
@@ -21,5 +25,3 @@ class DataReader:
         data = self.read_matlab_data(filename)
         label = self.labels[filename]
         return [data, label]
-
-

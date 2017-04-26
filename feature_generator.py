@@ -1,3 +1,7 @@
+"""
+ Created by Nidhi Mundra on 25/04/17.
+"""
+
 import numpy as np
 from scipy.stats import skew
 from sklearn.cluster import KMeans
@@ -47,7 +51,6 @@ class FeatureGenerator:
             return self.__get_wave_features__(feature_matrix, r_peaks, distances)
         except:
             return np.zeros(400)
-
 
     def __get_intermediate_peak_distances__(self, distance, data):
         """

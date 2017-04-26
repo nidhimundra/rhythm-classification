@@ -1,3 +1,7 @@
+"""
+ Created by Nidhi Mundra on 25/04/17.
+"""
+
 import copy
 import numpy as np
 from sklearn.cluster import KMeans

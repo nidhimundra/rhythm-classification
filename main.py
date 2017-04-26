@@ -1,3 +1,7 @@
+"""
+ Created by Nidhi Mundra on 26/04/17.
+"""
+
 import os
 import gc
 import cPickle
@@ -10,8 +14,9 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 
-from feature_generator import FeatureGenerator
 from data_reader import DataReader
+from feature_generator import FeatureGenerator
+from scorer import Scorer
 
 data_reader = DataReader()
 feature_generator = FeatureGenerator()
@@ -72,7 +77,8 @@ clf = GridSearchCV(classifier, param_grid=params, cv=10)
 
 pipeline = Pipeline([('feature_selector', feature_selector), ('clf', clf)])
 pipeline.fit(Xtr, Ytr)
-print "Accuracy: ", pipeline.score(Xte, Yte)
+prediction = pipeline.predict(Xte)
+print "Accuracy: ", Scorer.score(Xte, Yte)
 
 
 # TODO: Implement Scoring Method
