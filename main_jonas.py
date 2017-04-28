@@ -1,14 +1,9 @@
 import csv
 import os
-import pickle
 
-import numpy as np
 import scipy.io
-from sklearn.ensemble import AdaBoostClassifier
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.metrics import accuracy_score
-from sklearn.model_selection import GridSearchCV
 
+from outlier_models import Preprocessing
 from r_peak_finder import RPeakFinder
 
 
@@ -21,6 +16,7 @@ def read_lable_dict():
     return mydict
 
 
+preprocesser = Preprocessing()
 labels = []
 features = []
 for filename in os.listdir('training2017'):
@@ -32,9 +28,24 @@ for filename in os.listdir('training2017'):
         # plot_line_graph([mat1['val'][0]], [label], name)
         data = mat1['val'][0]
 
+        # rPeaks = RPeakFinder(data)
+        # rPeaks.plot("original")
+        # data = preprocesser.process(data)
+        # rPeaks = RPeakFinder(data)
+        # rPeaks.plot("preprocessed")
+        # rPeaks = RPeakFinder(data)
+        # rPeaks.plot("original")
+        # data = preprocesser.process(data)
+        # rPeaks = RPeakFinder(data)
+        # rPeaks.plot("preprocessed")
+        # # rPeaks.find_outliers()
+        # rPeaks.r_detection_outlier_removal()
         try:
             rPeaks = RPeakFinder(data)
             rPeaks.plot("original")
+            data = preprocesser.process(data)
+            rPeaks = RPeakFinder(data)
+            rPeaks.plot("preprocessed")
             # rPeaks.find_outliers()
             rPeaks.r_detection_outlier_removal()
             # rPeaks.remove_outliers()
@@ -45,11 +56,11 @@ for filename in os.listdir('training2017'):
             print(filename)
             print "had an error \n"
 
-with open('features.pickle', 'wb') as handle:
-    pickle.dump(features, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-with open('labels.pickle', 'wb') as handle:
-    pickle.dump(labels, handle, protocol=pickle.HIGHEST_PROTOCOL)
+# with open('features.pickle', 'wb') as handle:
+#     pickle.dump(features, handle, protocol=pickle.HIGHEST_PROTOCOL)
+#
+# with open('labels.pickle', 'wb') as handle:
+#     pickle.dump(labels, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
 # with open('features.pickle', 'rb') as handle:
 #     features = pickle.load(handle)
@@ -94,36 +105,36 @@ with open('labels.pickle', 'wb') as handle:
 #
 # with open('y_test.pickle', 'wb') as handle:
 #     pickle.dump(y_test, handle, protocol=pickle.HIGHEST_PROTOCOL)
-
-
-with open('X_train.pickle', 'rb') as handle:
-    X_train = pickle.load(handle)
-with open('X_test.pickle', 'rb') as handle:
-    X_test = pickle.load(handle)
-with open('y_train.pickle', 'rb') as handle:
-    y_train = pickle.load(handle)
-with open('y_test.pickle', 'rb') as handle:
-    y_test = pickle.load(handle)
-
-classifier = AdaBoostClassifier()
-base_classifier = RandomForestClassifier()
-
-params = {
-    "base_estimator": [base_classifier],
-    "n_estimators": range(30, 61, 10),
-    "learning_rate": np.arange(0.8, 1.01, 0.05),
-    # "base_estimator__n_estimators": range(5,15,5),
-    # "base_estimator__criterion": ["gini", "entropy"],
-    # "base_estimator__max_features":
-
-}
+#
+#
+# with open('X_train.pickle', 'rb') as handle:
+#     X_train = pickle.load(handle)
+# with open('X_test.pickle', 'rb') as handle:
+#     X_test = pickle.load(handle)
+# with open('y_train.pickle', 'rb') as handle:
+#     y_train = pickle.load(handle)
+# with open('y_test.pickle', 'rb') as handle:
+#     y_test = pickle.load(handle)
+#
+# classifier = AdaBoostClassifier()
+# base_classifier = RandomForestClassifier()
+#
+# params = {
+#     "base_estimator": [base_classifier],
+#     "n_estimators": range(30, 61, 10),
+#     "learning_rate": np.arange(0.8, 1.01, 0.05),
+#     # "base_estimator__n_estimators": range(5,15,5),
+#     # "base_estimator__criterion": ["gini", "entropy"],
+#     # "base_estimator__max_features":
+#
+# }
 
 # new_features = np.array(new_features)
 # new_labels = np.array(new_labels)
-
-cv = GridSearchCV(classifier, param_grid=params, cv=10)
-cv.fit(X_train, y_train)
-prediction = cv.best_estimator_.predict(X_test)
-accuracy = accuracy_score(y_test, prediction)
-
-print cv.best_score_
+#
+# cv = GridSearchCV(classifier, param_grid=params, cv=10)
+# cv.fit(X_train, y_train)
+# prediction = cv.best_estimator_.predict(X_test)
+# accuracy = accuracy_score(y_test, prediction)
+#
+# print cv.best_score_
