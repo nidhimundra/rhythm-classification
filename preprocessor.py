@@ -9,9 +9,9 @@ from sklearn.cluster import KMeans
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV
+from sklearn.linear_model import LogisticRegression
 
-
-class Preprocessing:
+class Preprocessor:
     def __init__(self):
         self.data = None
         self.all_labels = None
@@ -89,47 +89,47 @@ class Preprocessing:
             #     labels = pickle.load(handle)
 
 
-            # # classifier = LogisticRegression()
+            # classifier = LogisticRegression()
             #
             # base_classifier = RandomForestClassifier()
 
-            # classifier = AdaBoostClassifier(
-            #  n_estimators= 60,
-            #  base_estimator= RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
-            #                                           max_depth=None, max_features='auto', max_leaf_nodes=None,
-            #                                           min_impurity_split=1e-07, min_samples_leaf=1,
-            #                                           min_samples_split=2, min_weight_fraction_leaf=0.0,
-            #                                           n_estimators=10, n_jobs=1, oob_score=False, random_state=None,
-            #                                           verbose=0, warm_start=False),
-            #  learning_rate= 0.95000000000000018)
+            classifier = AdaBoostClassifier(
+             n_estimators= 60,
+             base_estimator= RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
+                                                      max_depth=None, max_features='auto', max_leaf_nodes=None,
+                                                      min_impurity_split=1e-07, min_samples_leaf=1,
+                                                      min_samples_split=2, min_weight_fraction_leaf=0.0,
+                                                      n_estimators=10, n_jobs=1, oob_score=False, random_state=None,
+                                                      verbose=0, warm_start=False),
+             learning_rate= 0.95000000000000018)
             # 0.869607843137
-            classifier = AdaBoostClassifier(base_estimator=RandomForestClassifier())
-            params = {
-                # "penalty": ["l1","l2"],
-                # "dual": [True,False],
-                #  "solver": [ "lbfgs", "liblinear", "sag"]
-
-
-
-                # Adaboost
-                # "base_estimator": [base_classifier],
-                "n_estimators": range(30, 61, 10),
-                "learning_rate": np.arange(0.8, 1.01, 0.05),
-                "base_estimator__n_estimators": range(5, 15, 5),
-                "base_estimator__criterion": ["gini", "entropy"],
-                "base_estimator__max_features": range(1, 13, 4)
-
-            }
+            # classifier = AdaBoostClassifier(base_estimator=RandomForestClassifier())
+            # params = {
+            #     # "penalty": ["l1","l2"],
+            #     # "dual": [True,False],
+            #     #  "solver": [ "lbfgs", "liblinear", "sag"]
+            #
+            #
+            #
+            #     # Adaboost
+            #     # "base_estimator": [base_classifier],
+            #     "n_estimators": range(30, 61, 10),
+            #     "learning_rate": np.arange(0.8, 1.01, 0.05),
+            #     "base_estimator__n_estimators": range(5, 15, 5),
+            #     "base_estimator__criterion": ["gini", "entropy"],
+            #     "base_estimator__max_features": range(1, 13, 4)
+            #
+            # }
 
             # new_features = np.array(new_features)
             # new_labels = np.array(new_labels)
 
-            cv = GridSearchCV(classifier, param_grid=params, cv=10)
-            cv.fit(features, labels)
-            print "middle optimization"
-            print cv.best_params_
-            print cv.best_score_
-            classifier = cv.best_estimator_
+            # cv = GridSearchCV(classifier, param_grid=params, cv=10)
+            # cv.fit(features, labels)
+            # print "middle optimization"
+            # print cv.best_params_
+            # print cv.best_score_
+            # classifier = cv.best_estimator_
             classifier.fit(features, labels)
 
             with open('pickle_files/middle_outlier_model.pickle', 'wb') as handle:
@@ -165,45 +165,45 @@ class Preprocessing:
             # with open('left_outliers_labels.pickle', 'rb') as handle:
             #     labels = pickle.load(handle)
 
-            # classifier = AdaBoostClassifier(n_estimators= 60,
-            #                                           base_estimator =  RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
-            #                                           max_depth=None, max_features='auto', max_leaf_nodes=None,
-            #                                           min_impurity_split=1e-07, min_samples_leaf=1,
-            #                                           min_samples_split=2, min_weight_fraction_leaf=0.0,
-            #                                           n_estimators=10, n_jobs=1, oob_score=False, random_state=None,
-            #                                           verbose=0, warm_start=False),
-            #                                           learning_rate=  0.85000000000000009)
+            classifier = AdaBoostClassifier(n_estimators= 60,
+                                                      base_estimator =  RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
+                                                      max_depth=None, max_features='auto', max_leaf_nodes=None,
+                                                      min_impurity_split=1e-07, min_samples_leaf=1,
+                                                      min_samples_split=2, min_weight_fraction_leaf=0.0,
+                                                      n_estimators=10, n_jobs=1, oob_score=False, random_state=None,
+                                                      verbose=0, warm_start=False),
+                                                      learning_rate=  0.85000000000000009)
+
+            classifier.fit(features,labels)
+
+            # classifier = AdaBoostClassifier(base_estimator=RandomForestClassifier())
+            # params = {
+            #     # "penalty": ["l1","l2"],
+            #     # "dual": [True,False],
+            #     #  "solver": [ "lbfgs", "liblinear", "sag"]
             #
-            # classifier.fit(features,labels)
-
-            classifier = AdaBoostClassifier(base_estimator=RandomForestClassifier())
-            params = {
-                # "penalty": ["l1","l2"],
-                # "dual": [True,False],
-                #  "solver": [ "lbfgs", "liblinear", "sag"]
-
-
-
-                # Adaboost
-                # "base_estimator": [base_classifier],
-                "n_estimators": range(30, 61, 10),
-                "learning_rate": np.arange(0.8, 1.01, 0.05),
-                "base_estimator__n_estimators": range(5, 15, 5),
-                "base_estimator__criterion": ["gini", "entropy"],
-                "base_estimator__max_features": range(1, 13, 4)
-
-            }
-
-            # new_features = np.array(new_features)
-            # new_labels = np.array(new_labels)
-
-            cv = GridSearchCV(classifier, param_grid=params, cv=10)
-            cv.fit(features, labels)
-            print "side optimization"
-            print cv.best_params_
-            print cv.best_score_
-            classifier = cv.best_estimator_
-            classifier.fit(features, labels)
+            #
+            #
+            #     # Adaboost
+            #     # "base_estimator": [base_classifier],
+            #     "n_estimators": range(30, 61, 10),
+            #     "learning_rate": np.arange(0.8, 1.01, 0.05),
+            #     "base_estimator__n_estimators": range(5, 15, 5),
+            #     "base_estimator__criterion": ["gini", "entropy"],
+            #     "base_estimator__max_features": range(1, 13, 4)
+            #
+            # }
+            #
+            # # new_features = np.array(new_features)
+            # # new_labels = np.array(new_labels)
+            #
+            # cv = GridSearchCV(classifier, param_grid=params, cv=10)
+            # cv.fit(features, labels)
+            # print "side optimization"
+            # print cv.best_params_
+            # print cv.best_score_
+            # classifier = cv.best_estimator_
+            # classifier.fit(features, labels)
 
             with open("pickle_files/" + side + "_outlier_model.pickle", 'wb') as handle:
                 cPickle.dump(classifier, handle, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -231,37 +231,37 @@ class Preprocessing:
                 features.append(feat)
                 labels.append(int(values["flip"]))
 
-            # classifier = LogisticRegression()
-            # classifier.fit(features, labels)
-
-            classifier = AdaBoostClassifier(base_estimator=RandomForestClassifier())
-            params = {
-                # "penalty": ["l1","l2"],
-                # "dual": [True,False],
-                #  "solver": [ "lbfgs", "liblinear", "sag"]
-
-
-
-                # Adaboost
-                # "base_estimator": [base_classifier],
-                "n_estimators": range(30, 61, 10),
-                "learning_rate": np.arange(0.8, 1.01, 0.05),
-                "base_estimator__n_estimators": range(5, 15, 5),
-                "base_estimator__criterion": ["gini", "entropy"],
-                "base_estimator__max_features": range(1, 10, 2)
-
-            }
-
-            # new_features = np.array(new_features)
-            # new_labels = np.array(new_labels)
-
-            cv = GridSearchCV(classifier, param_grid=params, cv=10)
-            cv.fit(features, labels)
-            print "flip optimization"
-            print cv.best_params_
-            print cv.best_score_
-            classifier = cv.best_estimator_
+            classifier = LogisticRegression()
             classifier.fit(features, labels)
+
+            # classifier = AdaBoostClassifier(base_estimator=RandomForestClassifier())
+            # params = {
+            #     # "penalty": ["l1","l2"],
+            #     # "dual": [True,False],
+            #     #  "solver": [ "lbfgs", "liblinear", "sag"]
+            #
+            #
+            #
+            #     # Adaboost
+            #     # "base_estimator": [base_classifier],
+            #     "n_estimators": range(30, 61, 10),
+            #     "learning_rate": np.arange(0.8, 1.01, 0.05),
+            #     "base_estimator__n_estimators": range(5, 15, 5),
+            #     "base_estimator__criterion": ["gini", "entropy"],
+            #     "base_estimator__max_features": range(1, 10, 2)
+            #
+            # }
+            #
+            # # new_features = np.array(new_features)
+            # # new_labels = np.array(new_labels)
+            #
+            # cv = GridSearchCV(classifier, param_grid=params, cv=10)
+            # cv.fit(features, labels)
+            # print "flip optimization"
+            # print cv.best_params_
+            # print cv.best_score_
+            # classifier = cv.best_estimator_
+            # classifier.fit(features, labels)
 
             with open('pickle_files/flipping_model.pickle', 'wb') as handle:
                 cPickle.dump(classifier, handle, protocol=cPickle.HIGHEST_PROTOCOL)
@@ -485,7 +485,7 @@ class Preprocessing:
 #
 
 #
-# preprocessing = Preprocessing()
+# preprocessing = Preprocessor()
 #
 #
 #

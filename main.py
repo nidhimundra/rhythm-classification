@@ -14,6 +14,7 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
 
+from preprocessor import Preprocessor
 from data_reader import DataReader
 from feature_generator import FeatureGenerator
 from scorer import Scorer
@@ -23,17 +24,20 @@ feature_generator = FeatureGenerator()
 features = []
 labels = []
 file_names = []
+preprocessor = Preprocessor()
 
 for filename in os.listdir('training2017'):
     if filename.endswith('.mat'):
         data, label = data_reader.fetch(filename[:-4])
         try:
+            data = preprocessor.process(data)
             features.append(feature_generator.get_features(data))
             labels.append(label)
             file_names.append(filename[:-4])
             print filename[:-4]
         except:
             print filename[:-4], "HAD AN ERROR!!"
+             # TODO: Do normal classification here - use rolling mean, std, var, max, min, etc  - Nidhi
 
 gc.disable()
 with open('wave_features.pickle', 'wb') as handle:
@@ -81,4 +85,14 @@ prediction = pipeline.predict(Xte)
 print "Accuracy: ", Scorer.score(Xte, Yte)
 
 
-# TODO: Implement Scoring Method
+# TODO: Intermediate Peak Finding - Jonas
+# TODO: Middle Outlier Elimination improvement - Hyperparameter optimization for preprocessor - Jonas
+# TODO: Code Refactoring - feature_generator, peak_finder, basic_peak_finder - Nidhi
+# TODO: Code Refactoring - preprocessor, split_train_test - Jonas
+# TODO: Classify waves whose peaks were unidentified - Nidhi
+# TODO: Add accuracy scorer in GridSearchCV - Nidhi
+# TODO: Test Accuracy Scorer - Nidhi
+# TODO: Feature Selection
+# TODO: Dimensionality Reduction
+# TODO: Classification Model Selection and their Hyperparameter Optimization
+# TODO: Heatmap for correlation between features - Nidhi - Not on Priority

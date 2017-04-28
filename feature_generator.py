@@ -47,12 +47,9 @@ class FeatureGenerator:
             feature_matrix.append(self.__get_wavelet_features__(distance, new_data))
 
         # Combine wavelet features to generate features of the whole wave
-        try:
-            return self.__get_wave_features__(feature_matrix, r_peaks, distances)
-        except:
-            return np.zeros(400)
+        return self.__get_wave_features__(feature_matrix, r_peaks, distances)
 
-    def __get_intermediate_peak_distances__(self, distance, data):
+    def __get_intermediate_peak_distances__distances__(self, distance, data):
         """
         Return distances between P, Q, R, S and T points of the ECG wave
         :param distance: distance between R-R peak
@@ -139,7 +136,7 @@ class FeatureGenerator:
     def get_features(self, data):
         """
         Get features of ECG wave 
-        :param data: ECK wave data points 
+        :param data: ECG wave data points 
         :return: generated features of the wave
         """
         # self.r_peaks, self.data = BasicPeakFinder(data).get_peaks_data()

@@ -3,7 +3,7 @@ import os
 
 import scipy.io
 
-from outlier_models import Preprocessing
+from preprocessor import Preprocessor
 from r_peak_finder import RPeakFinder
 
 
@@ -16,7 +16,7 @@ def read_lable_dict():
     return mydict
 
 
-preprocesser = Preprocessing()
+preprocesser = Preprocessor()
 labels = []
 features = []
 for filename in os.listdir('training2017'):
