@@ -53,6 +53,7 @@ class DataReader:
         # Initializing output arrays
         waves_data = []
         labels = []
+        filenames = []
 
         for filename in os.listdir(path):
 
@@ -63,5 +64,6 @@ class DataReader:
                 # Append results to output arrays
                 waves_data.append(data)
                 labels.append(label)
+                filenames.append(filename[:-4])
 
-        return [waves_data, labels]
+        return [waves_data, labels, filenames]

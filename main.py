@@ -10,14 +10,14 @@ data_reader = DataReader()
 clf = ECGClassifier()
 
 # Fit the training data in the classifier
-Xtr, Ytr = data_reader.fetch_data_and_labels(path='training_data')
+Xtr, Ytr, filenames = data_reader.fetch_data_and_labels(path='training_data')
 clf.fit(Xtr, Ytr)
 
 # Predict the accuracy score of the test output
 Xte, Yte = data_reader.fetch_data_and_labels(path='testing_data')
 print "Accuracy: ", clf.score(Xte, Yte)
 
-# TODO: Code Refactoring - peak_finder, basic_peak_finder - Nidhi
+# TODO: Code Refactoring - peak_finder - Nidhi
 # TODO: Classify waves whose peaks were unidentified - Nidhi
 # TODO: Test Accuracy Scorer - Nidhi
 
