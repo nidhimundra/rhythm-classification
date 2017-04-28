@@ -17,8 +17,11 @@ class FeatureGenerator:
     def __get_data_between_peaks__(self, first_peak, second_peak):
         """
         Get wave data between two peaks, Peak 1 and Peak 2
+        
         :param first_peak: Peak 1
+        
         :param second_peak: Peak 2
+        
         :return: Wave data points
         """
 
