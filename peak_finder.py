@@ -3,13 +3,17 @@
 """
 
 import copy
+
 import numpy as np
+from matplotlib import pyplot
 from sklearn.cluster import KMeans
+
 import peakutils
+from peakutils.plot import plot as pplot
 
 
 class PeakFinder:
-    def __init__(self, data):
+    def __init__(self, data, outliers):
         """
         Initialize the wave data, Find R peaks and Remove outliers 
         :param data: Wave data points 
@@ -18,7 +22,7 @@ class PeakFinder:
         self.data = data
 
         # Flip the wave if negative peaks are more
-        self.__flip_data__()
+        # self.__flip_data__()
 
         # Get all peaks
         self.__initial_peaks__()
@@ -27,7 +31,7 @@ class PeakFinder:
         self.r_peaks = copy.copy(self.peaks)
 
         # Initialize outlier array
-        self.outliers = []
+        self.outliers = outliers
 
         # Detect and remove outliers
         self.__outlier_removal__()
@@ -238,7 +242,7 @@ class PeakFinder:
         Remove Outliers from the detected peaks
         :param outliers: Array of outliers
         """
-        self.outliers = []
+        # self.outliers = []
         self.r_peaks = copy.copy(self.peaks)
         self.r_peaks = np.insert(self.r_peaks, 0, [0], axis=0)
         r_peaks = copy.copy(self.r_peaks.tolist())
@@ -300,3 +304,10 @@ class PeakFinder:
         :return: R peak points and the transformed wave data
         """
         return [self.r_peaks, self.data]
+
+    def plot(self, title):
+        length = len(self.data)
+        x = np.linspace(0, length - 1, length)
+        pyplot.figure(figsize=(10, 6))
+        pplot(x, self.data, self.r_peaks)
+        pyplot.title(title)

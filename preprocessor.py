@@ -8,7 +8,6 @@ import scipy.io
 from sklearn.cluster import KMeans
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import GridSearchCV
 
 
 class Preprocessor:
@@ -147,38 +146,45 @@ class Preprocessor:
             #                                           verbose=0, warm_start=False),
             #  learning_rate= 0.95000000000000018)
             # 0.869607843137
-            classifier = AdaBoostClassifier(base_estimator=RandomForestClassifier())
-            params = {
-                # "penalty": ["l1","l2"],
-                # "dual": [True,False],
-                #  "solver": [ "lbfgs", "liblinear", "sag"]
+            # classifier = AdaBoostClassifier(base_estimator=RandomForestClassifier())
+            classifier = AdaBoostClassifier(learning_rate=0.8,
+                                            base_estimator=RandomForestClassifier(criterion='gini', n_estimators=5,
+                                                                                  max_features=9))
 
+            # {'learning_rate': 0.79999999999999993, 'base_estimator__criterion': 'gini',
+            #  'base_estimator__n_estimators': 5, 'base_estimator__max_features': 9}
 
-
-                # Adaboost
-                # "base_estimator": [base_classifier],
-                # "n_estimators": range(30, 61, 10),
-                # "learning_rate": np.arange(0.8, 1.01, 0.05),
-                # "base_estimator__n_estimators": range(5, 15, 5),
-                # "base_estimator__criterion": ["gini", "entropy"],
-                # "base_estimator__max_features": range(1, 13, 4)
-
-                "learning_rate": np.arange(0.7, 1.01, 0.1),
-                "base_estimator__n_estimators": range(5, 15, 5),
-                "base_estimator__criterion": ["gini"],
-                "base_estimator__max_features": range(1, 13, 4)
-
-            }
+            # params = {
+            #     # "penalty": ["l1","l2"],
+            #     # "dual": [True,False],
+            #     #  "solver": [ "lbfgs", "liblinear", "sag"]
+            #
+            #
+            #
+            #     # Adaboost
+            #     # "base_estimator": [base_classifier],
+            #     # "n_estimators": range(30, 61, 10),
+            #     # "learning_rate": np.arange(0.8, 1.01, 0.05),
+            #     # "base_estimator__n_estimators": range(5, 15, 5),
+            #     # "base_estimator__criterion": ["gini", "entropy"],
+            #     # "base_estimator__max_features": range(1, 13, 4)
+            #
+            #     "learning_rate": np.arange(0.7, 1.01, 0.1),
+            #     "base_estimator__n_estimators": range(5, 15, 5),
+            #     "base_estimator__criterion": ["gini"],
+            #     "base_estimator__max_features": range(1, 13, 4)
+            #
+            # }
 
             # new_features = np.array(new_features)
             # new_labels = np.array(new_labels)
 
-            cv = GridSearchCV(classifier, param_grid=params, cv=10, verbose=10)
-            cv.fit(features, labels)
-            print "middle optimization"
-            print cv.best_params_
-            print cv.best_score_
-            classifier = cv.best_estimator_
+            # cv = GridSearchCV(classifier, param_grid=params, cv=10, verbose=10)
+            # cv.fit(features, labels)
+            # print "middle optimization"
+            # print cv.best_params_
+            # print cv.best_score_
+            # classifier = cv.best_estimator_
             classifier.fit(features, labels)
 
             # store the model in pickle file and return the trained model
@@ -259,9 +265,10 @@ class Preprocessor:
                                                 base_estimator=RandomForestClassifier(criterion='gini', n_estimators=5,
                                                                                       max_features=5))
             else:
-                classifier = AdaBoostClassifier(learning_rate=0.9,
+                classifier = AdaBoostClassifier(learning_rate=1.0,
                                                 base_estimator=RandomForestClassifier(criterion='gini', n_estimators=5,
                                                                                       max_features=5))
+
 
             # {'learning_rate': 0.89999999999999991, 'base_estimator__criterion': 'gini',
             #  'base_estimator__n_estimators': 5, 'base_estimator__max_features': 5}
@@ -285,7 +292,6 @@ class Preprocessor:
 
             features = []
             labels = []
-            baseline_flip = []
             for filename, values in all_labels.iteritems():
                 mat1 = scipy.io.loadmat('training_data/' + filename)
                 y = mat1['val'][0]
@@ -481,11 +487,11 @@ class Preprocessor:
                 old = []
                 new = []
                 for array in delete_points:
-                    for value in array:
-                        old.append(self.data[value])
+                    for i in range(array[0], array[1]):
+                        old.append(self.data[i])
                 for array in value["points"]:
-                    for value in array:
-                        new.append(self.data[value])
+                    for i in range(array[0], array[1]):
+                        new.append(self.data[i])
                 std_old = np.std(old)
                 std_new = np.std(new)
                 if std_new > std_old:
@@ -623,164 +629,3 @@ class Preprocessor:
             k_means_data.append(points)
 
         return features, k_means_data, k_means_points
-
-#
-#
-# def delete_parts( to_delete):
-#     to_delete = sorted(to_delete, key=itemgetter(0))
-#     new_to_delete = []
-#     i = 0
-#     j = 1
-#     lower = to_delete[i][0]
-#     upper = to_delete[i][1]
-#     while True:
-#
-#         if i == len(to_delete) - 1:
-#             new_to_delete.append([lower, upper])
-#             break
-#         if upper >= to_delete[i + 1][0]:
-#             upper = to_delete[i + 1][1]
-#             i += 1
-#         else:
-#             new_to_delete.append([lower, upper])
-#             i += 1
-#             lower = to_delete[i][0]
-#             upper = to_delete[i][1]
-#     distance = 0
-#     for i in range(0, len(new_to_delete)):
-#         new_to_delete[i][0] -= distance
-#         new_to_delete[i][1] -= distance
-#         distance += new_to_delete[i][1] - new_to_delete[i][0]
-#
-#     return new_to_delete
-#
-#
-# to_delete = [ [0,200], [200, 400], [600, 700], [699, 800], [1000,1002] ]
-# new_to_delete = delete_parts(to_delete)
-#
-
-#
-# preprocessing = Preprocessor()
-#
-#
-#
-#
-# with open('all_labels.pickle', 'rb') as handle:
-#     all_labels = pickle.load(handle)
-#
-# features = []
-# labels = []
-# baseline_flip = []
-# for filename, values in all_labels.iteritems():
-#
-#
-#     mat1 = scipy.io.loadmat('training_data/' + filename)
-#     y = mat1['val'][0]
-#     # feat, base = get_features_flipping(y)
-#     # feat = get_features_outliers(y, left= 0.9)
-#     feat, k_means_data, k_means_points = get_features_outliers_middle(y)
-#     features.append(feat)
-#     labels.append(int(values["middle"]))
-#
-# # with open('left_outliers_features.pickle', 'wb') as handle:
-# #     cPickle.dump(features, handle, protocol=cPickle.HIGHEST_PROTOCOL)
-# #
-# # with open('left_outliers_labels.pickle', 'wb') as handle:
-# #     cPickle.dump(labels, handle, protocol=cPickle.HIGHEST_PROTOCOL)
-# #
-# # with open('right_outliers_features.pickle', 'wb') as handle:
-# #     cPickle.dump(features, handle, protocol=cPickle.HIGHEST_PROTOCOL)
-# #
-# # with open('right_outliers_labels.pickle', 'wb') as handle:
-# #     cPickle.dump(labels, handle, protocol=cPickle.HIGHEST_PROTOCOL)
-#
-# with open('middle_outliers_features.pickle', 'wb') as handle:
-#     cPickle.dump(features, handle, protocol=cPickle.HIGHEST_PROTOCOL)
-#
-# with open('middle_outliers_labels.pickle', 'wb') as handle:
-#     cPickle.dump(labels, handle, protocol=cPickle.HIGHEST_PROTOCOL)
-#
-#
-# # with open('flip_features.pickle', 'wb') as handle:
-# #     cPickle.dump(features, handle, protocol=cPickle.HIGHEST_PROTOCOL)
-# #
-# # with open('flip_labels.pickle', 'wb') as handle:
-# #     cPickle.dump(labels, handle, protocol=cPickle.HIGHEST_PROTOCOL)
-# #
-# # with open('flip_labels_baseline.pickle', 'wb') as handle:
-# #     cPickle.dump(baseline_flip, handle, protocol=cPickle.HIGHEST_PROTOCOL)
-#
-#
-#
-# # with open('flip_features.pickle', 'rb') as handle:
-# #     features = pickle.load(handle)
-# #
-# #
-# # with open('flip_labels.pickle', 'rb') as handle:
-# #     labels = pickle.load(handle)
-# #
-# #
-# # with open('flip_labels_baseline.pickle', 'rb') as handle:
-# #     baseline_flip = pickle.load(handle)
-#
-#
-#
-#
-# with open('right_outliers_features.pickle', 'rb') as handle:
-#     features = pickle.load(handle)
-#
-#
-# with open('right_outliers_labels.pickle', 'rb') as handle:
-#     labels = pickle.load(handle)
-#
-#
-#
-#
-# # print "baseline = " + str(accuracy_score(labels, baseline_flip))
-#
-# # features = normalize(features, norm = "max" )
-# #
-#
-#
-# classifier = AdaBoostClassifier()
-# # classifier = LogisticRegression()
-#
-# base_classifier = RandomForestClassifier()
-#
-# params = {
-#     # "penalty": ["l1","l2"],
-#     # "dual": [True,False],
-#     #  "solver": [ "lbfgs", "liblinear", "sag"]
-#
-#
-#
-#     # Adaboost
-#     "base_estimator": [base_classifier],
-#     "n_estimators": range(30, 61, 10),
-#     # "learning_rate": np.arange(0.8, 1.01, 0.05),
-#     # "base_estimator__n_estimators": range(5,15,5),
-#     # "base_estimator__criterion": ["gini", "entropy"],
-#     # "base_estimator__max_features":
-#
-# }
-#
-# # new_features = np.array(new_features)
-# # new_labels = np.array(new_labels)
-#
-# cv = GridSearchCV(classifier, param_grid=params, cv=10)
-# cv.fit(features, labels)
-# print cv.best_params_
-# print cv.best_score_
-
-
-
-
-
-#
-# {'n_estimators': 40, 'base_estimator': RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
-#             max_depth=None, max_features='auto', max_leaf_nodes=None,
-#             min_impurity_split=1e-07, min_samples_leaf=1,
-#             min_samples_split=2, min_weight_fraction_leaf=0.0,
-#             n_estimators=10, n_jobs=1, oob_score=False, random_state=None,
-#             verbose=0, warm_start=False)}
-# 0.961764705882

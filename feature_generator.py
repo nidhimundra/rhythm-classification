@@ -7,7 +7,6 @@ from scipy.stats import skew
 from sklearn.cluster import KMeans
 
 from peak_finder import PeakFinder
-from basic_peak_finder import BasicPeakFinder
 
 
 class FeatureGenerator:
@@ -38,11 +37,14 @@ class FeatureGenerator:
         r_peaks = []
 
         # Find features for each wavelet
-        for i in range(0, len(self.r_peaks) - 1):
+        for i in range(0, (len(self.r_peaks) - 1)):
             distance = self.r_peaks[i + 1] - self.r_peaks[i]
             new_data = self.__get_data_between_peaks__(self.r_peaks[i], self.r_peaks[i + 1])
             distances.append(distance)
-            r_peaks.append(new_data[0])
+            try:
+                r_peaks.append(new_data[0])
+            except:
+                pass
 
             feature_matrix.append(self.__get_wavelet_features__(distance, new_data))
 
@@ -145,12 +147,15 @@ class FeatureGenerator:
 
         return features
 
-    def get_features(self, data):
+    def get_features(self, data, outliers):
         """
         Get features of ECG wave 
         :param data: ECG wave data points 
         :return: generated features of the wave
         """
         # self.r_peaks, self.data = BasicPeakFinder(data).get_peaks_data()
-        self.r_peaks, self.data = PeakFinder(data).get_peaks_data()
+        peakfinder = PeakFinder(data, outliers)
+        peakfinder.plot("outliers removed")
+        self.r_peaks, self.data = peakfinder.get_peaks_data()
+        peakfinder.plot("r peaks")
         return self.__generate_features__()

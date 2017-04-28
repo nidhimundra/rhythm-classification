@@ -5,6 +5,9 @@ from shutil import copyfile
 dir = 'training2017'
 test_dir = 'testing_data'
 train_dir = 'training_data'
+
+# Splits the data in 80:20 files
+
 for filename in os.listdir(dir):
     if filename.endswith('.mat'):
         mat = filename

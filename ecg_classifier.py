@@ -1,16 +1,16 @@
-import os
-import gc
 import cPickle
-import numpy as np
+import gc
+import os
 
+import numpy as np
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import f_regression
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
-from preprocessor import Preprocessor
 from feature_generator import FeatureGenerator
+from preprocessor import Preprocessor
 from scorer import Scorer
 
 
@@ -101,16 +101,19 @@ class ECGClassifier:
         transformed_X = []
 
         for data in X:
-            try:
-                # Remove outlier sections from the wave
-                data = self.preprocessor.process(data)
+            # try:
 
-                # Append the features of the transformed wave in the final output array
-                transformed_X.append(self.feature_generator.get_features(data))
-            except:
+            # Remove outlier sections from the wave
+            data, outliers = self.preprocessor.process(data)
 
-                # Append zeros in case of erroneous wave
-                transformed_X.append(np.zeros(400))
+            # Append the features of the transformed wave in the final output array
+            transformed_X.append(self.feature_generator.get_features(data, outliers))
+            # except:
+            #     pyplot.close("all")
+            #     peakfinder = PeakFinder(data, [])
+            #     peakfinder.plot("original")
+            #     # Append zeros in case of erroneous wave
+            #     transformed_X.append(np.zeros(400))
                 # TODO: Do normal classification here - use rolling mean, std, var, max, min, etc  - Nidhi
 
         # Store the data in pickle files
