@@ -6,6 +6,7 @@ import numpy as np
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import f_regression
+from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
 from sklearn.pipeline import Pipeline
 
@@ -32,7 +33,7 @@ class ECGClassifier:
         self.file_names = []
 
         # Custom scoring module
-        self.scorer = Scorer()
+        self.scorer = make_scorer(Scorer().score, greater_is_better=True)
 
         # Feature selection model
         self.feature_selector = SelectKBest(f_regression, k=5)
@@ -47,7 +48,7 @@ class ECGClassifier:
             "learning_rate": np.arange(0.8, 1.01, 0.05),
         }
 
-        self.classifier = GridSearchCV(clf, param_grid=params, cv=10)
+        self.classifier = GridSearchCV(clf, param_grid=params, cv=10, scoring=self.scorer)
 
         # Pipeline initialization
         self.pipeline = Pipeline([('feature_selector', self.feature_selector), ('clf', self.classifier)])
