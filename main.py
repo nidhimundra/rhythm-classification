@@ -2,21 +2,21 @@
  Created by Nidhi Mundra on 26/04/17.
 """
 
-import os
-import gc
 import cPickle
-import numpy as np
+import gc
+import os
 
+import numpy as np
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import f_regression
 from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import Pipeline
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
 
-from preprocessor import Preprocessor
 from data_reader import DataReader
 from feature_generator import FeatureGenerator
+from preprocessor import Preprocessor
 from scorer import Scorer
 
 data_reader = DataReader()
@@ -87,6 +87,7 @@ print "Accuracy: ", Scorer.score(Xte, Yte)
 
 # TODO: Intermediate Peak Finding - Jonas
 # TODO: Middle Outlier Elimination improvement - Hyperparameter optimization for preprocessor - Jonas
+# TODO: Add outliers of Preprocessing to overall outliers.
 # TODO: Code Refactoring - feature_generator, peak_finder, basic_peak_finder - Nidhi
 # TODO: Code Refactoring - preprocessor, split_train_test - Jonas
 # TODO: Classify waves whose peaks were unidentified - Nidhi
