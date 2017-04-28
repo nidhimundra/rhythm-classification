@@ -49,7 +49,7 @@ class FeatureGenerator:
         # Combine wavelet features to generate features of the whole wave
         return self.__get_wave_features__(feature_matrix, r_peaks, distances)
 
-    def __get_intermediate_peak_distances__distances__(self, distance, data):
+    def __get_intermediate_peak_distances__(self, distance, data):
         """
         Return distances between P, Q, R, S and T points of the ECG wave
         :param distance: distance between R-R peak
@@ -74,29 +74,41 @@ class FeatureGenerator:
         :param data: Data points
         :return: An array containting all the features of current wavelet
         """
+
         peak_distances = self.__get_intermediate_peak_distances__(distance, data)
-
         inner_features = []
-        for j in range(0, len(peak_distances) - 1):
-            subrange = range(peak_distances[j], peak_distances[j + 1])
-            sub_data = [data[k] for k in subrange]
-            crest = np.max(sub_data)
-            trough = np.min(sub_data)
-            mean = np.mean(sub_data)
-            std = np.std(sub_data)
-            wavelength = distance
-            wave_height = crest - trough
-            rms = np.sqrt(np.mean([i ** 2 for i in sub_data]))
-            skewness = skew(sub_data)
 
-            inner_features.append(crest)
-            inner_features.append(trough)
-            inner_features.append(mean)
-            inner_features.append(std)
-            inner_features.append(wavelength)
-            inner_features.append(wave_height)
-            inner_features.append(rms)
-            inner_features.append(skewness)
+        for j in range(0, len(peak_distances) - 1):
+            sub_range = range(peak_distances[j], peak_distances[j + 1])
+            sub_data = [data[k] for k in sub_range]
+
+            if len(sub_data) != 0:
+                crest = np.max(sub_data)
+                trough = np.min(sub_data)
+                mean = np.mean(sub_data)
+                std = np.std(sub_data)
+                wavelength = distance
+                wave_height = crest - trough
+                rms = np.sqrt(np.mean([i ** 2 for i in sub_data]))
+                skewness = skew(sub_data)
+                
+                inner_features.append(crest)
+                inner_features.append(trough)
+                inner_features.append(mean)
+                inner_features.append(std)
+                inner_features.append(wavelength)
+                inner_features.append(wave_height)
+                inner_features.append(rms)
+                inner_features.append(skewness)
+            else:
+                inner_features.append(0)
+                inner_features.append(0)
+                inner_features.append(0)
+                inner_features.append(0)
+                inner_features.append(0)
+                inner_features.append(0)
+                inner_features.append(0)
+                inner_features.append(0)
 
         return inner_features
 
