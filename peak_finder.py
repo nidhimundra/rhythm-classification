@@ -68,7 +68,7 @@ class PeakFinder:
         self.__remove_outliers__(self.outliers)
         self.__find_r_peaks__(outliers_removal=False)
 
-    def __get_cluster_stats__(self, X, k):
+    def __get_cluster_stats__(self, all_peaks_values, X, k):
         """
         Cluster the peaks to find the moments (count, mean and standard deviation) of each cluster
         :param X: Data to be clustered
@@ -78,13 +78,13 @@ class PeakFinder:
         kmeans = KMeans(n_clusters=k)
         prediction = kmeans.fit_predict(X)
         stats = {}
-        for i in range(0, len(self.data)):
+        for i in range(0, len(all_peaks_values)):
             if prediction[i] not in stats:
                 stats[prediction[i]] = {}
                 stats[prediction[i]]["values"] = []
                 stats[prediction[i]]["count"] = 0
             stats[prediction[i]]["count"] += 1
-            stats[prediction[i]]["values"].append(self.data[i])
+            stats[prediction[i]]["values"].append(all_peaks_values[i])
         for key, value in stats.iteritems():
             stats[key]["std"] = np.std(value["values"])
             stats[key]["mean"] = kmeans.cluster_centers_[key]
@@ -112,7 +112,7 @@ class PeakFinder:
                     if (float(stats[key]["count"]) / (len(all_peaks_values)) > (1.0 / (2 * k))) and \
                                     stats[key]["mean"] > r_k_center and stats[key]["std"] / stats[key][
                         "mean"] < 1.2 * std_k:
-                        median_all = stats[key]["mean"]
+                        median_all = stats[key]["mean"][0]
                         std_k = stats[key]["std"] / stats[key]["mean"]
 
 
@@ -243,7 +243,7 @@ class PeakFinder:
         :param outliers: Array of outliers
         """
         # self.outliers = []
-        self.r_peaks = copy.copy(self.peaks)
+        # self.r_peaks = copy.copy(self.peaks)
         self.r_peaks = np.insert(self.r_peaks, 0, [0], axis=0)
         r_peaks = copy.copy(self.r_peaks.tolist())
         if outliers is None:
