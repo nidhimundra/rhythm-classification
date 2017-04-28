@@ -32,8 +32,10 @@ class Preprocessor:
 
     def process(self, data):
         """
-        Processes the ECG: Flipps it, delets obvious outliers at the start, middle and end
+        Processes the ECG: Flipps it, deletes obvious outliers at the start, middle and end
+        
         :param data:  ECG
+        
         :return: preprocessed ECG
         """
 
@@ -83,6 +85,7 @@ class Preprocessor:
     def get_all_labels(self):
         """
         If all_labels has never been called, load it from the pickle file
+        
         :return: all_labels -> the hand labeld set for flipping, left, middle and right outliers
         """
         if self.all_labels == None:
@@ -94,6 +97,7 @@ class Preprocessor:
 
         """
         generates the model to identify if the ECG contains outliers in the middle
+        
         :return: middle outlier model
         """
 
@@ -374,7 +378,9 @@ class Preprocessor:
     def delete_parts(self, to_delete):
         """
         delets the parts of the ECG that were found to be outliers
+        
         :param to_delete: list of arrays start to finish
+        
         : return : outliers
         """
 
@@ -421,9 +427,13 @@ class Preprocessor:
     def del_snippet(self, data, start, end):
         """
         delets a snippet from the ECG data
+        
         :param data: ECG
+        
         :param start: Starting index that needs to be deleted
+        
         :param end: End index that needs to be deleted
+        
         :return: updated ECG Data
         """
 
@@ -440,9 +450,13 @@ class Preprocessor:
 
         """
         fit k means cluster with k cluster and get statistics
+        
         :param k_means_data: snippets of dataparts
+        
         :param k_means_points: range of snippet
+        
         :param k: k
+        
         :return: statistics to each cluster
         """
 
@@ -462,9 +476,12 @@ class Preprocessor:
 
     def k_means_splitting(self, k_means_data, k_means_points):
         """
-        k means clustering und datasnippets of middle parts of ECG.
-        :param k_means_data:  snippets of dataparts
+        k means clustering und data snippets of middle parts of ECG.
+        
+        :param k_means_data:  snippets of data parts
+        
         :param k_means_points: range of snippet
+        
         :return: points to be deleted
         """
 
@@ -503,7 +520,9 @@ class Preprocessor:
     def get_features_flipping(self, data):
         """
         generate features for flipping
+        
         :param data: ECG
+        
         :return: Feature array
         """
         maxi = np.max(data)
@@ -531,8 +550,11 @@ class Preprocessor:
     def get_features_outliers(self, data, left):
         """
         generate features for left and right model
+        
         :param data: ECG
+        
         :param left: float indicating how the data should be split. left = 0.1 for left side left = 0.9 for right side
+        
         :return: Feature array
         """
         length_data = len(data)
@@ -588,7 +610,9 @@ class Preprocessor:
     def get_features_outliers_middle(self, data):
         """
         generate features for middle
+        
         :param data: ECG
+        
         :return: Feature array
         """
         length_data = len(data)

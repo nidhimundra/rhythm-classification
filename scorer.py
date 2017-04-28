@@ -49,7 +49,9 @@ class Scorer:
         Formula given at https://www.physionet.org/challenge/2017/
         
         :param predicted_y: Array containing all the predicted labels
+        
         :param actual_y: Array containing all the actual labels
+        
         :return: Prediction Score 
         """
         for i in xrange(len(predicted_y)):
