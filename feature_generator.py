@@ -17,8 +17,11 @@ class FeatureGenerator:
     def __get_data_between_peaks__(self, first_peak, second_peak):
         """
         Get wave data between two peaks, Peak 1 and Peak 2
+        
         :param first_peak: Peak 1
+        
         :param second_peak: Peak 2
+        
         :return: Wave data points
         """
 
@@ -34,6 +37,7 @@ class FeatureGenerator:
     def __generate_features__(self):
         """
         Generate all the features from the R Peaks and ECG wave data
+        
         :return: Extracted features
         """
 
@@ -63,8 +67,11 @@ class FeatureGenerator:
     def __get_intermediate_peak_distances__(self, distance, data):
         """
         Return distances between P, Q, R, S and T points of the ECG wave
+        
         :param distance: distance between R-R peak
+        
         :param data: Data points
+        
         :return: An array containting all the intermediate distances
         """
 
@@ -83,8 +90,11 @@ class FeatureGenerator:
 
         """
         Get features of each wavelet
-        :param distance: Distance between current R-R peak 
+        
+        :param distance: Distance between current R-R peak
+         
         :param data: Data points
+        
         :return: An array containting all the features of current wavelet
         """
 
@@ -136,9 +146,13 @@ class FeatureGenerator:
     def __get_wave_features__(self, feature_matrix, r_peaks, distances):
         """
         Extract features of the whole wave from the wavelet features
+        
         :param feature_matrix: 2D array contatining features of each wavelet
+        
         :param r_peaks: R Peak points
+        
         :param distances: Distance between R-R peak
+        
         :return: Features array of the whole wave 
         """
 
@@ -177,8 +191,10 @@ class FeatureGenerator:
 
     def get_features(self, data, outliers):
         """
-        Get features of ECG wave 
-        :param data: ECG wave data points 
+        Get features of ECG wave
+         
+        :param data: ECG wave data points
+         
         :return: generated features of the wave
         """
         # Get peaks and data of the given wave

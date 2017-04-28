@@ -15,7 +15,8 @@ from peakutils.plot import plot as pplot
 class PeakFinder:
     def __init__(self, data, outliers):
         """
-        Initialize the wave data, Find R peaks and Remove outliers 
+        Initialize the wave data, Find R peaks and Remove outliers
+         
         :param data: Wave data points 
         """
 
@@ -40,12 +41,18 @@ class PeakFinder:
         """
         Flip the wave if the negative data points are more than the positive data points
         """
+
+        # Initialize counters
         negative_count = 0
         positive_count = 0
 
         for i in self.data:
+
+            # Increment the positive count if the data point is greater than 200
             if i > 200:
                 positive_count += 1
+
+            # Increment the negative count if the data point is lesser than 200
             elif i < -200:
                 negative_count += 1
 
@@ -54,9 +61,8 @@ class PeakFinder:
             self.data = -self.data
 
     def __initial_peaks__(self):
-
         """
-        Detect peaks using peakutils
+        Detect peaks using peakutils library
         """
         self.peaks = peakutils.indexes(self.data, thres=0.46, min_dist=30)
 
@@ -64,56 +70,101 @@ class PeakFinder:
         """
         Detect R peaks and remove outliers adn restitch the wave after outlier removal
         """
+
+        # Find all the R peaks in the wave
         self.__find_r_peaks__(outliers_removal=True)
+
+        # Remove outliers and transform the data
         self.__remove_outliers__(self.outliers)
+
+        # Find outliers from the transformed data
         self.__find_r_peaks__(outliers_removal=False)
 
-    def __get_cluster_stats__(self, all_peaks_values, X, k):
+    def __get_cluster_stats__(self, X, k):
         """
         Cluster the peaks to find the moments (count, mean and standard deviation) of each cluster
+        
         :param X: Data to be clustered
+        
         :param k: No. of clusters
+        
         :return: Statistical data of each cluster
         """
+
+        # Initialize output
+        stats = {}
+
+        # Cluster the data into k clusters
         kmeans = KMeans(n_clusters=k)
         prediction = kmeans.fit_predict(X)
-        stats = {}
-        for i in range(0, len(all_peaks_values)):
+
+        for i in range(0, len(self.data)):
+
+            # Store the values and count of elements of each cluster
             if prediction[i] not in stats:
+                # Initialize on first occurence
                 stats[prediction[i]] = {}
                 stats[prediction[i]]["values"] = []
                 stats[prediction[i]]["count"] = 0
+
+            # Increment the count and store the value
             stats[prediction[i]]["count"] += 1
-            stats[prediction[i]]["values"].append(all_peaks_values[i])
+            stats[prediction[i]]["values"].append(self.data[i])
+
         for key, value in stats.iteritems():
+            # Compute standard deviation and mean of the values and cluster centers
             stats[key]["std"] = np.std(value["values"])
             stats[key]["mean"] = kmeans.cluster_centers_[key]
 
         return stats
 
+    # TODO: Jonas please explain the logic here
     def __find_r_peaks__(self, outliers_removal=False):
         """
         Detect R Peaks in the wave data
+        
         :param outliers_removal: True if outlier removal to be done, False otherwise
         """
 
+        # Initialize the output
         all_peaks_values = []
+
+        # Store the data value of all the R peak indices
         for i in self.r_peaks:
             all_peaks_values.append(self.data[i])
 
+        # Transpose the data to perform clustering of each peak
         x = np.array([all_peaks_values]).T
+
+        # Compute median of all the peak values
         median_all = np.median(all_peaks_values)
+
         try:
-            r_k_center = 0
-            std_k = 99
+
+            # Initialize best R cluster and its standard deviation
+            best_r_cluster = 0
+            std_cluster = 99
+
             for k in range(1, 4):
+                """
+                Cluster the peaks data to predict the R peaks correctly.
+                The cluster with medium number of data points and 
+                are higher than most of the data points is selected
+                as the one with most accurate R peaks.
+                """
+
+                # Compute stats for the clusters
                 stats = self.__get_cluster_stats__(all_peaks_values, x, k)
+
                 for key, value in stats.iteritems():
+
+                    # TODO: Jonas please explain the logic here
                     if (float(stats[key]["count"]) / (len(all_peaks_values)) > (1.0 / (2 * k))) and \
-                                    stats[key]["mean"] > r_k_center and stats[key]["std"] / stats[key][
-                        "mean"] < 1.2 * std_k:
-                        median_all = stats[key]["mean"][0]
-                        std_k = stats[key]["std"] / stats[key]["mean"]
+                                    stats[key]["mean"] > best_r_cluster and \
+                                            stats[key]["std"] / stats[key]["mean"] < 1.2 * std_cluster:
+                        # Compute the median and standard deviation of the data
+                        median_all = stats[key]["mean"]
+                        std_cluster = stats[key]["std"] / stats[key]["mean"]
 
 
         except:
@@ -227,23 +278,29 @@ class PeakFinder:
     def __next__(self, element, list_items):
         """
         Return the next element of the string 
+        
         :param element: Current element index
+        
         :param list_items: Array of all the elements
+        
         :return: Index and value of the next item.
-         Returns None in case current element was the last element of the list items
+        
+        Returns None in case current element was the last element of the list items
         """
+
         if len(list_items) == element + 1:
             return element + 1, None
         else:
             return element + 1, list_items[element + 1]
 
+    # TODO: Jonas please explain the logic here
     def __remove_outliers__(self, outliers=None):
         """
         Remove Outliers from the detected peaks
+        
         :param outliers: Array of outliers
         """
-        # self.outliers = []
-        # self.r_peaks = copy.copy(self.peaks)
+        self.r_peaks = copy.copy(self.peaks)
         self.r_peaks = np.insert(self.r_peaks, 0, [0], axis=0)
         r_peaks = copy.copy(self.r_peaks.tolist())
         if outliers is None:
@@ -301,13 +358,24 @@ class PeakFinder:
     def get_peaks_data(self):
         """
         Get all the R Peaks and the Wave data after outlier removal
+        
         :return: R peak points and the transformed wave data
         """
         return [self.r_peaks, self.data]
 
     def plot(self, title):
-        length = len(self.data)
-        x = np.linspace(0, length - 1, length)
+        """
+        Plot the ECG wave using self.data
+         
+        :param title: The title of the waveform
+        """
+
+        # Data to be plotted
+        data = np.linspace(0, len(self.data) - 1, len(self.data))
+
         pyplot.figure(figsize=(10, 6))
-        pplot(x, self.data, self.r_peaks)
+
+        # Plot using pplot library
+        pplot(data, self.data, self.r_peaks)
+
         pyplot.title(title)

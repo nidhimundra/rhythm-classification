@@ -57,7 +57,8 @@ class ECGClassifier:
         """
         Fits the training data and labels in the classifier
         
-        :param X: Training data 
+        :param X: Training data
+         
         :param Y: Training labels 
         """
 
@@ -67,7 +68,9 @@ class ECGClassifier:
     def predict(self, X):
         """
         Predict test labels
+        
         :param X: Test Data
+        
         :return: Return predicted output labels
         """
 
@@ -77,7 +80,9 @@ class ECGClassifier:
     def score(self, X, Y):
         """
         Predict and compute the accuracy score
+        
         :param X: Test data
+        
         :param Y: Actual labels of test data 
         """
         predicted_Y = self.predict(X)
@@ -86,7 +91,9 @@ class ECGClassifier:
     def __transform__(self, X, prefix='training'):
         """
         Transforms the provided waves data into array containing features of each wave
+        
         :param X: 2D array containing data points of all the waves
+        
         :return: Tranformed X
         """
 
