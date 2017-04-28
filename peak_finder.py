@@ -80,7 +80,7 @@ class PeakFinder:
         # Find outliers from the transformed data
         self.__find_r_peaks__(outliers_removal=False)
 
-    def __get_cluster_stats__(self, X, k):
+    def __get_cluster_stats__(self, all_peak_values, X, k):
         """
         Cluster the peaks to find the moments (count, mean and standard deviation) of each cluster
         
@@ -109,7 +109,7 @@ class PeakFinder:
 
             # Increment the count and store the value
             stats[prediction[i]]["count"] += 1
-            stats[prediction[i]]["values"].append(self.data[i])
+            stats[prediction[i]]["values"].append(all_peak_values[i])
 
         for key, value in stats.iteritems():
             # Compute standard deviation and mean of the values and cluster centers
@@ -300,7 +300,7 @@ class PeakFinder:
         
         :param outliers: Array of outliers
         """
-        self.r_peaks = copy.copy(self.peaks)
+        # self.r_peaks = copy.copy(self.peaks)
         self.r_peaks = np.insert(self.r_peaks, 0, [0], axis=0)
         r_peaks = copy.copy(self.r_peaks.tolist())
         if outliers is None:
