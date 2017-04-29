@@ -11,8 +11,8 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import Pipeline
 from sklearn.svm import LinearSVC
+from sklearn.pipeline import Pipeline
 
 from feature_generator import FeatureGenerator
 from preprocessor import Preprocessor
