@@ -158,7 +158,9 @@ class PeakFinder:
 
                 for key, value in stats.iteritems():
 
-                    # TODO: Jonas please explain the logic here
+                    # if the counts of the intermediate cluster is greater than 1/2k and the avg value in the cluster is
+                    # higher than the one previously found and the standard deviation is at least 20% better then
+                    # use the new cluster mean as the median_all
                     if (float(stats[key]["count"]) / (len(all_peaks_values)) > (1.0 / (2 * k))) and \
                                     stats[key]["mean"] > best_r_cluster and \
                                             stats[key]["std"] / stats[key]["mean"] < 1.2 * std_cluster:
@@ -194,25 +196,33 @@ class PeakFinder:
         std = np.std(top_peak_values)
         median = np.median(top_peak_values)
 
+        # if outlier_removal has been turned on, remove the outliers
         if outliers_removal:
 
             for i in range(0, len(self.r_peaks)):
-
-                if self.r_peaks[i] > len(self.data):
-                    print ""
-
+                # if the current peak's value is not in the range of median in a threshold of 2* standard deviation then add the
+                # peak to outliers
                 if not ((self.data[self.r_peaks[i]] < median + (2 * std)) and (
                             self.data[self.r_peaks[i]] > median - (2 * std))):
                     outliers.append(self.r_peaks[i])
+                # if the peak's values do not decrease in the next 80 indices very fast,
+                # add the peak to outliers
                 elif i < len(self.r_peaks) - 1:
                     if self.r_peaks[i + 1] - self.r_peaks[i] < 80:
                         outliers.append(self.r_peaks[i])
 
+            # append to outliers
             self.outliers += outliers
 
+            # remove outliers from r_peaks
             for o in self.outliers:
                 self.r_peaks = np.delete(self.r_peaks, np.argwhere(self.r_peaks == o))
+
+
+        # if not outlier removal, find the R-Peaks
         else:
+
+            # Same as above but without assuming that there are still outliers
             top_peak_values = []
             for i in self.r_peaks:
                 if i in other_peaks:
@@ -220,6 +230,7 @@ class PeakFinder:
                 else:
                     top_peak_values.append(self.data[i])
 
+            # calculate the distance between two peaks
             previous = None
             distances = []
             for i in self.r_peaks:
@@ -228,15 +239,27 @@ class PeakFinder:
                 previous = i
 
             try:
+
+                # calculate the std of the distances
                 avg_distance = np.mean(distances)
                 std_distance = np.std(distances)
 
+                # If the STD is at least 90 we will cluster the distances
+                # this is done because often the T-Peak has a similar hight compared to the R-Peak
+                # Therefore the T-Peak is classified as a R-Peak. If find two clusters of distances
+                # that have a very low std, we can assume that the high std of distances is only due
+                # to the fact that we have a short distance between the R-T peaks but a high distance
+                # between the T-R peaks. We therefore delete the second (T-) Peak from R_Peaks
+
                 if std_distance > 90:
 
+                    # cluster the distances into two clusters
                     stats = self.__get_cluster_stats__(distances, x, 2)
 
+                    # if the clusters are evenly distributed then we assume a R-T peak case
                     if stats[0]['count'] >= 0.3 * len(distances) and stats[1]['count'] >= 0.3 * len(distances):
 
+                        # derive which one is the R-Peak and which one is the T-Peak and add it to other_peaks
                         previous = None
                         for i in range(0, len(self.r_peaks)):
                             if (previous is not None and (
@@ -249,12 +272,16 @@ class PeakFinder:
             except:
                 ""
 
+            # eliminate other_peaks from r_peaks
             for i in self.r_peaks:
                 if i in other_peaks:
                     self.r_peaks = np.delete(self.r_peaks, np.argwhere(self.r_peaks == i))
                 else:
                     top_peak_values.append(self.data[i])
 
+        # This is a hack. sometimes the found peak is off by one to the left or right. This just checks which one is higher
+        # and resets the r_peak to that value.
+        # TODO: find the reason why this is happening
         for i in range(0, len(self.r_peaks)):
             if self.r_peaks[i] == 0:
                 left_of_i = 0
@@ -293,14 +320,18 @@ class PeakFinder:
         else:
             return element + 1, list_items[element + 1]
 
-    # TODO: Jonas please explain the logic here
+
     def __remove_outliers__(self, outliers=None):
         """
-        Remove Outliers from the detected peaks
+        Remove Outliers the dataset and recalculate the peaks.
+        Logic is if we find an outlier, we delete all values between two found R-Peaks.
+        This way a whole chunk of the ECG is immediately deleted.
+        Problem is that if we delete a chunk, each peak that comes after the chunk, needs
+        to be updated by the amount of datapoints that were deleted
         
         :param outliers: Array of outliers
         """
-        # self.r_peaks = copy.copy(self.peaks)
+
         self.r_peaks = np.insert(self.r_peaks, 0, [0], axis=0)
         r_peaks = copy.copy(self.r_peaks.tolist())
         if outliers is None:
@@ -313,44 +344,74 @@ class PeakFinder:
         out_i, val_out = self.__next__(out_i, outliers)
         in_i, val_it_next = self.__next__(in_i, r_peaks)
 
+        # This algorithm loops through all the outliers and finds the R-Peak before
+        # the outlier and the next R-Peak and deletes all values from the ECG
         while True:
+
+            # if there is no next values, break
             if val_it is None or val_out is None:
                 break
+
             if val_it <= val_out and val_out >= 0:
+
+                # Loop until a outlier , an R lowe and an R higher than the outlier is found
                 while True:
+
+                    # if either no more outliers, or no more no more R-Peaks, break
                     if val_it_next is None or val_out is None:
                         val_it = None
                         break
+
+                    # if the next R Peak is higher than than the outlier break
                     if val_it_next > val_out:
                         break
+
+                    # if the next R Peak is still smaller than the outlier, update the lower R-Peak
                     if val_it_next < val_out:
                         val_it = val_it_next
 
+                    # get the next R-Peak
                     in_i, val_it_next = self.__next__(in_i, r_peaks)
+
+                # if either no more outliers, or no more no more R-Peaks, break
                 if val_it is None or val_out is None:
                     break
 
+                # initialize if we are at the first R-Peak and its index 0, then we will take the new R-Peak as the
+                # next R-Peak values
                 if val_it == 0:
                     new_r = self.data[val_it_next]
+
+                # Else merge the two R-Peaks as an average of the previous and next hight
                 else:
                     new_r = (self.data[val_it] + self.data[val_it_next]) / 2
 
+                # update the R-peak value in the dataset
                 self.data[val_it] = new_r
 
+                # delete the range of one R-Peak to the next from the dataset
                 self.data = np.delete(self.data, range(val_it + 1, val_it_next + 1))
+
+                # Remove the next R peak from the R_peaks and step one back for indexes of R-Peaks
+                # because there might be other outliers in this interval.
                 r_peaks.remove(val_it_next)
                 in_i -= 1
 
+                # update the indices of each outlier
                 difference = (val_it_next - val_it)
                 for j in range(0, len(outliers)):
                     if outliers[j] > val_it_next:
                         outliers[j] -= difference
 
+                # update the indices of each R-Peak
                 for k in range(0, len(r_peaks)):
                     if r_peaks[k] > val_it_next:
                         r_peaks[k] -= difference
 
+                # update the already called val_it_next
                 val_it_next -= difference
+
+            # get the next outlier
             out_i, val_out = self.__next__(out_i, outliers)
 
         self.r_peaks = r_peaks

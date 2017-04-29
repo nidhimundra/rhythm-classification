@@ -25,9 +25,6 @@ print "Accuracy: ", clf.score(Xte, Yte)
 # TODO: Test Accuracy Scorer - Nidhi
 
 # TODO: Intermediate Peak Finding - Jonas
-# TODO: Middle Outlier Elimination improvement - Hyperparameter optimization for preprocessor - Jonas
-# TODO: Add outliers of Preprocessing to overall outliers - Jonas
-# TODO: Code Refactoring - preprocessor, split_train_test - Jonas
 # TODO: Feature Selection
 # TODO: Dimensionality Reduction
 # TODO: Classification Model Selection and their Hyperparameter Optimization

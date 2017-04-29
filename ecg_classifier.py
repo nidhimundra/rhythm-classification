@@ -7,14 +7,12 @@ import gc
 import os
 
 import numpy as np
-from matplotlib import pyplot
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import f_regression
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
 
-import peak_finder as pre
 from feature_generator import FeatureGenerator
 from preprocessor import Preprocessor
 from scorer import Scorer
@@ -151,9 +149,9 @@ class ECGClassifier:
             data = X[i]
             # try:
             print filenames[i]
-            pyplot.close("all")
+            # pyplot.close("all")
             # peakfinder = ([], [])
-            pre.plot("original", data)
+            # pre.plot("original", data)
 
             # Remove outlier sections from the wave
             data, outliers = self.preprocessor.process(data)

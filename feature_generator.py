@@ -198,9 +198,9 @@ class FeatureGenerator:
         # self.r_peaks, self.data = BasicPeakFinder(data).get_peaks_data()
 
         peakfinder = PeakFinder(data, outliers)
-        peakfinder.plot("preprocessed")
+        # peakfinder.plot("preprocessed")
         self.r_peaks, self.data = peakfinder.get_peaks_data()
-        peakfinder.plot("rpeaks")
+        # peakfinder.plot("rpeaks")
 
         """
         If the number of peaks are sufficient, then generate peak features
