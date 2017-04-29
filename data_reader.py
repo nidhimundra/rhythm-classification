@@ -2,8 +2,9 @@
  Created by Nidhi Mundra on 25/04/17.
 """
 
-import os
 import csv
+import os
+
 import scipy.io
 
 
@@ -87,7 +88,7 @@ class DataReader:
                 file_names.append(filename[:-4])
 
             count += 1
-            if count > 30:
-                break
+            # if count > 30:
+            #     break
 
         return [waves_data, labels, file_names]

@@ -14,8 +14,8 @@ from sklearn.feature_selection import f_regression
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
 
+import peak_finder as pre
 from feature_generator import FeatureGenerator
-from peak_finder import PeakFinder
 from preprocessor import Preprocessor
 from scorer import Scorer
 
@@ -152,8 +152,9 @@ class ECGClassifier:
             # try:
             print filenames[i]
             pyplot.close("all")
-            peakfinder = PeakFinder(data, [])
-            peakfinder.plot("original")
+            # peakfinder = ([], [])
+            pre.plot("original", data)
+
             # Remove outlier sections from the wave
             data, outliers = self.preprocessor.process(data)
 

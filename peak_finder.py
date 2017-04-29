@@ -25,14 +25,14 @@ class PeakFinder:
         # Flip the wave if negative peaks are more
         # self.__flip_data__()
 
+        # Initialize outlier array
+        self.outliers = outliers
+
         # Get all peaks
         self.__initial_peaks__()
 
         # Initialize r_peaks array
         self.r_peaks = copy.copy(self.peaks)
-
-        # Initialize outlier array
-        self.outliers = outliers
 
         # Detect and remove outliers
         self.__outlier_removal__()
@@ -98,7 +98,7 @@ class PeakFinder:
         kmeans = KMeans(n_clusters=k)
         prediction = kmeans.fit_predict(X)
 
-        for i in range(0, len(self.data)):
+        for i in range(0, len(all_peak_values)):
 
             # Store the values and count of elements of each cluster
             if prediction[i] not in stats:
@@ -148,7 +148,7 @@ class PeakFinder:
             for k in range(1, 4):
                 """
                 Cluster the peaks data to predict the R peaks correctly.
-                The cluster with medium number of data points and 
+                The cluster with medium number of data points and
                 are higher than most of the data points is selected
                 as the one with most accurate R peaks.
                 """
@@ -168,7 +168,7 @@ class PeakFinder:
 
 
         except:
-            ""
+            print "to less peaks to cluster"
 
         outliers = [0]
         other_peaks = []
@@ -363,19 +363,40 @@ class PeakFinder:
         """
         return [self.r_peaks, self.data]
 
-    def plot(self, title):
+    def plot(self, title, data=None):
         """
         Plot the ECG wave using self.data
-         
+
         :param title: The title of the waveform
         """
 
+        if data == None:
+            data = self.data
+
         # Data to be plotted
-        data = np.linspace(0, len(self.data) - 1, len(self.data))
+        y = np.linspace(0, len(data) - 1, len(data))
 
         pyplot.figure(figsize=(10, 6))
 
         # Plot using pplot library
-        pplot(data, self.data, self.r_peaks)
+        pplot(y, data, self.r_peaks)
 
         pyplot.title(title)
+
+
+def plot(title, data):
+    """
+    Plot the ECG wave using self.data
+
+    :param title: The title of the waveform
+    """
+
+    # Data to be plotted
+    y = np.linspace(0, len(data) - 1, len(data))
+
+    pyplot.figure(figsize=(10, 6))
+
+    # Plot using pplot library
+    pplot(y, data, [0])
+
+    pyplot.title(title)
