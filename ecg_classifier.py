@@ -54,7 +54,7 @@ class ECGClassifier:
         }
 
         self.classifier_1 = GridSearchCV(clf_1, param_grid=params,
-                                         cv=10, scoring=make_scorer(self.scorer.score))
+                                         cv=10, scoring=make_scorer(self.scorer.score), verbose=10)
 
         clf_2 = AdaBoostClassifier()
         base_classifier_2 = RandomForestClassifier()
@@ -66,7 +66,7 @@ class ECGClassifier:
         }
 
         self.classifier_2 = GridSearchCV(clf_2, param_grid=params,
-                                         cv=2, scoring=make_scorer(self.scorer.score))
+                                         cv=2, scoring=make_scorer(self.scorer.score), verbose=10)
 
         # Pipeline initializations
         self.pipeline_1 = Pipeline([('feature_selector', self.feature_selector_1), ('clf', self.classifier_1)])
