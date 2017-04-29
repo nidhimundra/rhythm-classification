@@ -8,7 +8,6 @@ from sklearn.cluster import KMeans
 
 from peak_finder import PeakFinder
 from rolling_stats_calculator import RollingStatsCalculator
-from basic_peak_finder import BasicPeakFinder
 
 
 class FeatureGenerator:
@@ -197,11 +196,15 @@ class FeatureGenerator:
         """
         # Get peaks and data of the given wave
         # self.r_peaks, self.data = BasicPeakFinder(data).get_peaks_data()
-        self.r_peaks, self.data = PeakFinder(data, outliers).get_peaks_data()
+
+        peakfinder = PeakFinder(data, outliers)
+        peakfinder.plot("preprocessed")
+        self.r_peaks, self.data = peakfinder.get_peaks_data()
+        peakfinder.plot("rpeaks")
 
         """
         If the number of peaks are sufficient, then generate peak features
-        Else, create features from the wave data  
+        Else, create features from the wave data
         """
         if len(self.r_peaks) > 1:
             # Get features from the extracted peaks and data
@@ -214,7 +217,7 @@ class FeatureGenerator:
     def __generate_rolling_features__(self):
 
         """
-        Generate rolling features of data 
+        Generate rolling features of data
         :return: Array containing all the features
         """
         return self.rolling_stats_calculator.rolling_mean(self.data) \

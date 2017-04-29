@@ -7,14 +7,15 @@ import gc
 import os
 
 import numpy as np
+from matplotlib import pyplot
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import f_regression
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import Pipeline
 
 from feature_generator import FeatureGenerator
+from peak_finder import PeakFinder
 from preprocessor import Preprocessor
 from scorer import Scorer
 
@@ -73,7 +74,7 @@ class ECGClassifier:
         self.pipeline_1 = self.classifier_1
         self.pipeline_2 = self.classifier_2
 
-    def fit(self, X, Y):
+    def fit(self, X, Y, filenames):
         """
         Fits the training data and labels in the classifier
         
@@ -82,7 +83,7 @@ class ECGClassifier:
         :param Y: Training labels 
         """
 
-        X1, I1, X2, I2 = self.__transform__(X, 'training')
+        X1, I1, X2, I2 = self.__transform__(X, filenames, 'training')
         Y1, Y2 = self.__get_feature_labels__(Y, I1, I2)
         self.pipeline_1.fit(X1, Y1)
         self.pipeline_2.fit(X2, Y2)
@@ -113,7 +114,7 @@ class ECGClassifier:
         predicted_Y = self.predict(X)
         return self.scorer.score(predicted_Y, Y)
 
-    def __transform__(self, X, prefix='training'):
+    def __transform__(self, X, filenames, prefix='training'):
         """
         Transforms the provided waves data into array containing features of each wave
         
@@ -145,10 +146,14 @@ class ECGClassifier:
         point_features = []
         point_indices = []
 
-        for i in xrange(len(X)):
-
+        # for data in X:
+        for i in range(0, len(X)):
             data = X[i]
-
+            # try:
+            print filenames[i]
+            pyplot.close("all")
+            peakfinder = PeakFinder(data, [])
+            peakfinder.plot("original")
             # Remove outlier sections from the wave
             data, outliers = self.preprocessor.process(data)
 
@@ -190,13 +195,13 @@ class ECGClassifier:
     def __get_feature_labels__(self, Y, I1, I2):
         """
         Get feature labels for corresponding index arrays
-        
+
         :param Y: Output labels array
-        
-        :param I1: Index Array 
-        
+
+        :param I1: Index Array
+
         :param I2: Index Array
-        
+
         :return: Corresponding label arrays
         """
         Y1 = []
@@ -214,16 +219,16 @@ class ECGClassifier:
 
         """
         Merge two output labels arrays using index arrays
-        
+
         :param Y1: Labels array
-         
+
         :param Y2: Labels array
-        
+
         :param I1: Index array
-         
+
         :param I2: Index array
-        
-        :return: Merged output labels array 
+
+        :return: Merged output labels array
         """
         output = np.zeros(len(Y1) + len(Y2))
 
