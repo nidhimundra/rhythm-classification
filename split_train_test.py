@@ -1,3 +1,7 @@
+"""
+ Created by Jonas Pfeiffer on 26/04/17.
+"""
+
 import os
 from random import randint
 from shutil import copyfile

@@ -1,3 +1,7 @@
+"""
+ Created by Jonas Pfeiffer on 26/04/17.
+"""
+
 import csv
 import os
 import pickle
@@ -12,25 +16,10 @@ from peakutils.plot import plot as pplot
 def read_lable_dict():
     with open('training2017/REFERENCE.csv', mode='r') as infile:
         reader = csv.reader(infile)
-        # with open('coors_new.csv', mode='w') as outfile:
-        # writer = csv.writer(outfile)
         mydict = {rows[0]: rows[1] for rows in reader}
     return mydict
 
 
-# def read_all_lable_dict():
-#     with open('training2017/REFERENCE.csv', mode='r') as infile:
-#         reader = csv.reader(infile)
-#         # with open('coors_new.csv', mode='w') as outfile:
-#         # writer = csv.writer(outfile)
-#         lower = {}
-#
-#         lower["label"] = rows[1]
-#
-#         mydict = {rows[0]: {"label" : rows[1], "flip": rows[2],} for rows in reader}
-#     return mydict
-
-# all_labels = {}
 with open('all_labels.pickle', 'rb') as handle:
     all_labels = pickle.load(handle)
 label_dict = read_lable_dict()
@@ -40,12 +29,9 @@ for filename in os.listdir(dir):
     if filename.endswith('.mat'):
         name = filename[:-4]
 
-        if (name not in all_labels):
-            # all_labels["A01096"]["right"] = 0
-            # print filename
+        if name not in all_labels:
             label = label_dict[name]
             mat1 = scipy.io.loadmat('training_data/' + filename)
-            # plot_line_graph([mat1['val'][0]], [label], name)
             y = mat1['val'][0]
             length = len(y)
             x = np.linspace(0, length - 1, length)

@@ -8,10 +8,11 @@ import os
 
 import numpy as np
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import f_regression
+from sklearn.feature_selection import SelectFromModel
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
+from sklearn.svm import LinearSVC
+from sklearn.pipeline import Pipeline
 
 from feature_generator import FeatureGenerator
 from preprocessor import Preprocessor
@@ -36,13 +37,13 @@ class ECGClassifier:
         self.file_names = []
 
         # Custom scoring module
-        self.scorer = make_scorer(Scorer().score, greater_is_better=True)
+        self.scorer = Scorer()
 
-        # Feature selection model
-        self.feature_selector_1 = SelectKBest(f_regression, k=5)
-        self.feature_selector_2 = SelectKBest(f_regression, k=5)
+        # Feature selection models
+        self.feature_selector_1 = SelectFromModel(LinearSVC(penalty="l1", dual=False))
+        self.feature_selector_2 = SelectFromModel(LinearSVC(penalty="l1", dual=False))
 
-        # Classification model
+        # Classification models
         clf_1 = AdaBoostClassifier()
         base_classifier_1 = RandomForestClassifier()
 
@@ -52,7 +53,8 @@ class ECGClassifier:
             "learning_rate": np.arange(0.8, 1.01, 0.05),
         }
 
-        self.classifier_1 = GridSearchCV(clf_1, param_grid=params, cv=10, scoring=self.scorer)
+        self.classifier_1 = GridSearchCV(clf_1, param_grid=params,
+                                         cv=10, scoring=make_scorer(self.scorer.score))
 
         clf_2 = AdaBoostClassifier()
         base_classifier_2 = RandomForestClassifier()
@@ -63,14 +65,13 @@ class ECGClassifier:
             "learning_rate": np.arange(0.8, 1.01, 0.05),
         }
 
-        self.classifier_2 = GridSearchCV(clf_2, param_grid=params, cv=10, scoring=self.scorer)
+        self.classifier_2 = GridSearchCV(clf_2, param_grid=params,
+                                         cv=2, scoring=make_scorer(self.scorer.score))
 
-        # Pipeline initialization
-        # self.pipeline_1 = Pipeline([('feature_selector', self.feature_selector_1), ('clf', self.classifier_1)])
-        # self.pipeline_2 = Pipeline([('feature_selector', self.feature_selector_2), ('clf', self.classifier_2)])
+        # Pipeline initializations
+        self.pipeline_1 = Pipeline([('feature_selector', self.feature_selector_1), ('clf', self.classifier_1)])
+        self.pipeline_2 = Pipeline([('feature_selector', self.feature_selector_2), ('clf', self.classifier_2)])
 
-        self.pipeline_1 = self.classifier_1
-        self.pipeline_2 = self.classifier_2
 
     def fit(self, X, Y, filenames):
         """
@@ -95,8 +96,7 @@ class ECGClassifier:
         :return: Return predicted output labels
         """
 
-        X = self.__transform__(X, 'test')
-        X1, I1, X2, I2 = self.__transform__(X, 'training')
+        X1, I1, X2, I2 = self.__transform__(X, 'test')
         Y1 = self.pipeline_1.predict(X1)
         Y2 = self.pipeline_2.predict(X2)
         return self.__merge__(Y1, Y2, I1, I2)
@@ -136,7 +136,7 @@ class ECGClassifier:
             with open("pickle_files/" + prefix + "_point_indices.pickle", "rb") as handle:
                 point_indices = cPickle.load(handle)
 
-            return [peak_features[1:-1], peak_indices[1:-1], point_features[1:-1], point_indices[1:-1]]
+            return [peak_features, peak_indices, point_features, point_indices]
 
         # Initializing output labels
         peak_features = []
@@ -147,7 +147,7 @@ class ECGClassifier:
         # for data in X:
         for i in range(0, len(X)):
             data = X[i]
-            # try:
+
             print filenames[i]
             # pyplot.close("all")
             # peakfinder = ([], [])
@@ -160,11 +160,9 @@ class ECGClassifier:
             features, type = self.feature_generator.get_features(data, outliers)
 
             if type == "peak":
-                print "peak", i
                 peak_features.append(features)
                 peak_indices.append(i)
             else:
-                print "point", i
                 point_features.append(features)
                 point_indices.append(i)
 
@@ -176,7 +174,7 @@ class ECGClassifier:
 
         gc.disable()
         with open("pickle_files/" + prefix + '_point_data.pickle', 'wb') as handle:
-            cPickle.dump(peak_features, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(point_features, handle, protocol=cPickle.HIGHEST_PROTOCOL)
         gc.enable()
 
         gc.disable()
@@ -186,10 +184,10 @@ class ECGClassifier:
 
         gc.disable()
         with open("pickle_files/" + prefix + '_point_indices.pickle', 'wb') as handle:
-            cPickle.dump(peak_indices, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+            cPickle.dump(point_indices, handle, protocol=cPickle.HIGHEST_PROTOCOL)
         gc.enable()
 
-        return [peak_features[1:-1], peak_indices[1:-1], point_features[1:-1], point_indices[1:-1]]
+        return [peak_features, peak_indices, point_features, point_indices]
 
     def __get_feature_labels__(self, Y, I1, I2):
         """

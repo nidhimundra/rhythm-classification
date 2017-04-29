@@ -1,3 +1,7 @@
+"""
+ Created by Jonas Pfeiffer on 26/04/17.
+"""
+
 import cPickle
 import os.path
 import pickle
@@ -29,7 +33,6 @@ class Preprocessor:
         self.right_outlier_model = self.get_side_outlier_model(left=0.9, side="right")
         self.middle_outlier_model = self.get_middle_outlier_model()
 
-
     def process(self, data):
         """
         Processes the ECG: Flipps it, deletes obvious outliers at the start, middle and end
@@ -43,17 +46,17 @@ class Preprocessor:
         self.data = data
 
         # features and prediction of left outliers. left_part contains an array of the indexes that need to be
-        # elminiated if prediction == 1
+        # elminated if prediction == 1
         left_feat, left_part = self.get_features_outliers(data, left=0.2)
         left_pred = self.left_outlier_model.predict(left_feat)
 
         # features and prediction of right outliers. right_part contains an array of the indexes that need to be
-        # elminiated if prediction == 1
+        # elminated if prediction == 1
         right_feat, right_part = self.get_features_outliers(data, left=0.9)
         right_pred = self.right_outlier_model.predict(right_feat)
 
         # features and prediction of middle outliers. k_means_points contains an array of the indexes that need to be
-        # elminiated if prediction == 1
+        # elminated if prediction == 1
         middle_feat, k_means_data, k_means_points = self.get_features_outliers_middle(data)
         middle_pred = self.middle_outlier_model.predict(middle_feat)
 
@@ -69,7 +72,7 @@ class Preprocessor:
             to_delete += self.k_means_splitting(k_means_data, k_means_points)
 
         outliers = []
-        if (to_delete != []):
+        if to_delete != []:
             outliers = self.delete_parts(to_delete)
 
         # predict if dataset needs to be flipped on basis of the outlier removed ECG
@@ -77,7 +80,7 @@ class Preprocessor:
         flip_pred = self.flipping_model.predict(flip_feat)
 
         # if prediction of flipping is true, flip the dataset and return it
-        if (flip_pred[0] == 1):
+        if flip_pred[0] == 1:
             return -self.data, outliers
         else:
             return self.data, outliers
@@ -129,66 +132,9 @@ class Preprocessor:
                 # retrieve the labeld data and append for training set
                 labels.append(int(values["middle"]))
 
-            # with open('middle_outliers_features.pickle', 'rb') as handle:
-            #     features = pickle.load(handle)
-            #
-            # with open('middle_outliers_labels.pickle', 'rb') as handle:
-            #     labels = pickle.load(handle)
-
-
-            # classifier = LogisticRegression()
-            #
-            # base_classifier = RandomForestClassifier()
-
-            # classifier = AdaBoostClassifier(
-            #  n_estimators= 60,
-            #  base_estimator= RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
-            #                                           max_depth=None, max_features='auto', max_leaf_nodes=None,
-            #                                           min_impurity_split=1e-07, min_samples_leaf=1,
-            #                                           min_samples_split=2, min_weight_fraction_leaf=0.0,
-            #                                           n_estimators=10, n_jobs=1, oob_score=False, random_state=None,
-            #                                           verbose=0, warm_start=False),
-            #  learning_rate= 0.95000000000000018)
-            # 0.869607843137
-            # classifier = AdaBoostClassifier(base_estimator=RandomForestClassifier())
             classifier = AdaBoostClassifier(learning_rate=0.8,
                                             base_estimator=RandomForestClassifier(criterion='gini', n_estimators=5,
                                                                                   max_features=9))
-
-            # {'learning_rate': 0.79999999999999993, 'base_estimator__criterion': 'gini',
-            #  'base_estimator__n_estimators': 5, 'base_estimator__max_features': 9}
-
-            # params = {
-            #     # "penalty": ["l1","l2"],
-            #     # "dual": [True,False],
-            #     #  "solver": [ "lbfgs", "liblinear", "sag"]
-            #
-            #
-            #
-            #     # Adaboost
-            #     # "base_estimator": [base_classifier],
-            #     # "n_estimators": range(30, 61, 10),
-            #     # "learning_rate": np.arange(0.8, 1.01, 0.05),
-            #     # "base_estimator__n_estimators": range(5, 15, 5),
-            #     # "base_estimator__criterion": ["gini", "entropy"],
-            #     # "base_estimator__max_features": range(1, 13, 4)
-            #
-            #     "learning_rate": np.arange(0.7, 1.01, 0.1),
-            #     "base_estimator__n_estimators": range(5, 15, 5),
-            #     "base_estimator__criterion": ["gini"],
-            #     "base_estimator__max_features": range(1, 13, 4)
-            #
-            # }
-
-            # new_features = np.array(new_features)
-            # new_labels = np.array(new_labels)
-
-            # cv = GridSearchCV(classifier, param_grid=params, cv=10, verbose=10)
-            # cv.fit(features, labels)
-            # print "middle optimization"
-            # print cv.best_params_
-            # print cv.best_score_
-            # classifier = cv.best_estimator_
             classifier.fit(features, labels)
 
             # store the model in pickle file and return the trained model
@@ -208,61 +154,12 @@ class Preprocessor:
 
             features = []
             labels = []
-            baseline_flip = []
             for filename, values in all_labels.iteritems():
                 mat1 = scipy.io.loadmat('training_data/' + filename)
                 y = mat1['val'][0]
-                # feat, base = self.get_features_flipping(y)
                 feat, left_part = self.get_features_outliers(y, left=left)
-                # feat, k_means_data, k_means_points = get_features_outliers_middle(y)
                 features.append(feat)
                 labels.append(int(values[side]))
-
-            #
-            # with open('left_outliers_features.pickle', 'rb') as handle:
-            #     features = pickle.load(handle)
-            #
-            # with open('left_outliers_labels.pickle', 'rb') as handle:
-            #     labels = pickle.load(handle)
-
-            # classifier = AdaBoostClassifier(n_estimators= 60,
-            #                                           base_estimator =  RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
-            #                                           max_depth=None, max_features='auto', max_leaf_nodes=None,
-            #                                           min_impurity_split=1e-07, min_samples_leaf=1,
-            #                                           min_samples_split=2, min_weight_fraction_leaf=0.0,
-            #                                           n_estimators=10, n_jobs=1, oob_score=False, random_state=None,
-            #                                           verbose=0, warm_start=False),
-            #                                           learning_rate=  0.85000000000000009)
-            #
-            # classifier.fit(features,labels)
-
-            # classifier = AdaBoostClassifier(base_estimator=RandomForestClassifier())
-            # params = {
-            #     # "penalty": ["l1","l2"],
-            #     # "dual": [True,False],
-            #     #  "solver": [ "lbfgs", "liblinear", "sag"]
-            #
-            #
-            #
-            #     # Adaboost
-            #     # "base_estimator": [base_classifier],
-            #     #"n_estimators": range(30, 61, 10),
-            #     "learning_rate": np.arange(0.7, 1.01, 0.1),
-            #     "base_estimator__n_estimators": range(5, 15, 5),
-            #     "base_estimator__criterion": ["gini"],
-            #     "base_estimator__max_features": range(1, 13, 4)
-            #
-            # }
-            #
-            # # new_features = np.array(new_features)
-            # # new_labels = np.array(new_labels)
-            #
-            # cv = GridSearchCV(classifier, param_grid=params, cv=10, verbose=10)
-            # cv.fit(features, labels)
-            # print "side optimization"
-            # print cv.best_params_
-            # print cv.best_score_
-            # classifier = cv.best_estimator_
 
             if side == "left":
                 classifier = AdaBoostClassifier(learning_rate=0.9,
@@ -272,11 +169,6 @@ class Preprocessor:
                 classifier = AdaBoostClassifier(learning_rate=1.0,
                                                 base_estimator=RandomForestClassifier(criterion='gini', n_estimators=5,
                                                                                       max_features=5))
-
-
-            # {'learning_rate': 0.89999999999999991, 'base_estimator__criterion': 'gini',
-            #  'base_estimator__n_estimators': 5, 'base_estimator__max_features': 5}
-
 
             classifier.fit(features, labels)
 
@@ -300,75 +192,13 @@ class Preprocessor:
                 mat1 = scipy.io.loadmat('training_data/' + filename)
                 y = mat1['val'][0]
                 feat, base = self.get_features_flipping(y)
-                # feat = get_features_outliers(y, left= 0.9)
-                # feat, k_means_data, k_means_points = get_features_outliers_middle(y)
                 features.append(feat)
                 labels.append(int(values["flip"]))
-
-            # classifier = LogisticRegression()
-            # classifier.fit(features, labels)
 
             classifier = AdaBoostClassifier(learning_rate=0.79999999999999993,
                                             base_estimator=RandomForestClassifier(criterion='gini', n_estimators=5,
                                                                                   max_features=1))
 
-            # params = {
-            #     # "penalty": ["l1","l2"],
-            #     # "dual": [True,False],
-            #     #  "solver": [ "lbfgs", "liblinear", "sag"]
-            #
-            #
-            #
-            #     # Adaboost
-            #     # "base_estimator": [base_classifier],
-            #     # "n_estimators": range(30, 61, 10),
-            #     # "learning_rate": np.arange(0.8, 1.01, 0.05),
-            #     # "base_estimator__n_estimators": range(5, 15, 5),
-            #     # "base_estimator__criterion": ["gini", "entropy"],
-            #     # "base_estimator__max_features": range(1, 10, 2)
-            #     "learning_rate": np.arange(0.7, 1.01, 0.1),
-            #     "base_estimator__n_estimators": range(5, 15, 5),
-            #     "base_estimator__criterion": ["gini"],
-            #     "base_estimator__max_features": range(1, 13, 4)
-            # #
-            # }
-
-            # learning_rate = 0.85, n_estimators = 60, base_estimator__criterion = gini, base_estimator__n_estimators = 5, base_estimator__max_features = 1, score = 0.970588, total = 5.1
-            # s
-            # [CV]
-            # learning_rate = 0.85, n_estimators = 60, base_estimator__criterion = gini, base_estimator__n_estimators = 5, base_estimator__max_features = 1
-            # [CV]
-
-
-            # [CV]
-            # learning_rate = 0.85, n_estimators = 30, base_estimator__criterion = gini, base_estimator__n_estimators = 5, base_estimator__max_features = 1, score = 0.970297, total = 2.2
-            # s
-            # [CV]
-            # learning_rate = 0.85, n_estimators = 40, base_estimator__criterion = gini, base_estimator__n_estimators = 5, base_estimator__max_features = 1
-
-            # new_features = np.array(new_features)
-            # new_labels = np.array(new_labels)
-
-            # [CV]
-            # learning_rate = 0.8, n_estimators = 60, base_estimator__criterion = gini, base_estimator__n_estimators = 5, base_estimator__max_features = 1, score = 0.990099, total = 5.3
-            # s
-            # [CV]
-            # learning_rate = 0.85, n_estimators = 30, base_estimator__criterion = gini, base_estimator__n_estimators = 5, base_estimator__max_features = 1
-
-            # [CV]
-            # learning_rate = 0.8, n_estimators = 50, base_estimator__criterion = gini, base_estimator__n_estimators = 5, base_estimator__max_features = 1, score = 0.990099, total = 4.8
-            # s
-            # [CV]
-            # learning_rate = 0.8, n_estimators = 60, base_estimator__criterion = gini, base_estimator__n_estimators = 5, base_estimator__max_features = 1
-
-            # classifier = AdaBoostClassifier(n_estimators = 60, learning_rate = 0.8, base_estimator=RandomForestClassifier(criterion = "gini" ,n_estimators = 5 , max_features = 1))
-
-            # cv = GridSearchCV(classifier, param_grid=params, cv=10, verbose=10)
-            # cv.fit(features, labels)
-            # print "flip optimization"
-            # print cv.best_params_
-            # print cv.best_score_
-            # classifier = cv.best_estimator_
             classifier.fit(features, labels)
 
             with open('pickle_files/flipping_model.pickle', 'wb') as handle:
@@ -390,7 +220,6 @@ class Preprocessor:
         # overlapping arrays need to be merged: [[0,200],[200,400],[600,800]] = [[0,400],[600,800]]
         new_to_delete = []
         i = 0
-        j = 1
         lower = to_delete[i][0]
         upper = to_delete[i][1]
         while True:
@@ -415,14 +244,12 @@ class Preprocessor:
             new_to_delete[i][1] -= distance
             distance += new_to_delete[i][1] - new_to_delete[i][0]
 
-
         outliers = []
         for elem in new_to_delete:
             outliers.append(elem[0])
             self.data = self.del_snippet(self.data, elem[0], elem[1])
         return outliers
 
-            # return new_to_delete
 
     def del_snippet(self, data, start, end):
         """
@@ -439,9 +266,9 @@ class Preprocessor:
 
         length = len(data)
         new_data = []
-        if (start != 0):
+        if start != 0:
             new_data = np.concatenate((new_data, data[0:start]))
-        if (end != length):
+        if end != length:
             new_data = np.concatenate((new_data, data[end:length]))
 
         return new_data
@@ -472,7 +299,6 @@ class Preprocessor:
             stats[prediction[i]]["count"] += 1
             stats[prediction[i]]["points"].append(k_means_points[i])
         return stats
-
 
     def k_means_splitting(self, k_means_data, k_means_points):
         """

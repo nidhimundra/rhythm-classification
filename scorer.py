@@ -12,16 +12,16 @@ class Scorer:
         """
 
         # List of all the class labels
-        self.labels = ['N', 'O', 'A', '~']
+        self.labels = [0, 1, 2, 3]
 
         # Dictionary to store count of each label in predicted labels list
-        self.total_prediction_count = {'N': 0, 'A': 0, 'F': 0, '~': 0}
+        self.total_prediction_count = {0: 0, 1: 0, 2: 0, 3: 0}
 
         # Dictionary to store count of each label in actual labels list
-        self.total_actual_count = {'N': 0, 'A': 0, 'F': 0, '~': 0}
+        self.total_actual_count = {0: 0, 1: 0, 2: 0, 3: 0}
 
         # Dictionary to store count of correctly predicted labels
-        self.total_correct_prediction_count = {'N': 0, 'A': 0, 'F': 0, '~': 0}
+        self.total_correct_prediction_count = {0: 0, 1: 0, 2: 0, 3: 0}
 
     def __get_f1_scores__(self):
         """
@@ -35,8 +35,12 @@ class Scorer:
 
         for label in self.labels:
             # Compute f1 value for current label
-            f1 = 2 * self.total_correct_prediction_count[label] / \
-                 (self.total_actual_count[label] + self.total_prediction_count[label])
+
+            if self.total_correct_prediction_count[label] != 0:
+                f1 = float(2 * self.total_correct_prediction_count[label]) / \
+                     float(self.total_actual_count[label] + self.total_prediction_count[label])
+            else:
+                f1 = 0.0
 
             # Append computed f1 score to output array
             output = np.append(output, f1)
@@ -60,7 +64,7 @@ class Scorer:
             actual_label = actual_y[i]
 
             # Increment the count of corrected predicted label if predicted and actual labels are same
-            if predicted_label is actual_label:
+            if predicted_label == actual_label:
                 self.total_correct_prediction_count[actual_label] += 1
 
             # Increment total counts

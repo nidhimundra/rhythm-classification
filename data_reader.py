@@ -2,9 +2,8 @@
  Created by Nidhi Mundra on 25/04/17.
 """
 
-import csv
 import os
-
+import csv
 import scipy.io
 
 
@@ -75,7 +74,6 @@ class DataReader:
         labels = []
         file_names = []
 
-        count = 0
         for filename in os.listdir(path):
 
             # Fetch data from all .mat files
@@ -86,9 +84,5 @@ class DataReader:
                 waves_data.append(data)
                 labels.append(self.labels_map[label])
                 file_names.append(filename[:-4])
-
-            count += 1
-            # if count > 30:
-            #     break
 
         return [waves_data, labels, file_names]

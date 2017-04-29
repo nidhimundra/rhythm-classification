@@ -1,5 +1,5 @@
 """
- Created by Nidhi Mundra on 25/04/17.
+ Created by Jonas Pfeiffer on 26/04/17.
 """
 
 import copy
@@ -118,7 +118,6 @@ class PeakFinder:
 
         return stats
 
-    # TODO: Jonas please explain the logic here
     def __find_r_peaks__(self, outliers_removal=False):
         """
         Detect R Peaks in the wave data
@@ -281,7 +280,6 @@ class PeakFinder:
 
         # This is a hack. sometimes the found peak is off by one to the left or right. This just checks which one is higher
         # and resets the r_peak to that value.
-        # TODO: find the reason why this is happening
         for i in range(0, len(self.r_peaks)):
             if self.r_peaks[i] == 0:
                 left_of_i = 0

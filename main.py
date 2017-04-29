@@ -14,19 +14,9 @@ data_reader = DataReader()
 clf = ECGClassifier()
 
 # Fit the training data in the classifier
-Xtr, Ytr, filenames = data_reader.fetch_data_and_labels(path='training_data')
-clf.fit(Xtr, Ytr, filenames)
+Xtr, Ytr, file_names = data_reader.fetch_data_and_labels(path='training_data')
+clf.fit(Xtr, Ytr, file_names)
 
 # Predict the accuracy score of the test output
-Xte, Yte = data_reader.fetch_data_and_labels(path='testing_data')
+Xte, Yte, file_names = data_reader.fetch_data_and_labels(path='testing_data')
 print "Accuracy: ", clf.score(Xte, Yte)
-
-# TODO: Classify waves whose peaks were unidentified - Nidhi
-# TODO: Test Accuracy Scorer - Nidhi
-
-# TODO: Intermediate Peak Finding - Jonas
-# TODO: Feature Selection
-# TODO: Dimensionality Reduction
-# TODO: Classification Model Selection and their Hyperparameter Optimization
-# TODO: Heatmap for correlation between features - Nidhi - Not on Priority
-# TODO: Eliminate DeprecationWarning for 1d arrays

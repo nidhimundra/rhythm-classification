@@ -206,7 +206,7 @@ class FeatureGenerator:
         If the number of peaks are sufficient, then generate peak features
         Else, create features from the wave data
         """
-        if len(self.r_peaks) > 1:
+        if len(self.r_peaks) >= 10:
             # Get features from the extracted peaks and data
             return [self.__generate_features__(), "peak"]
         else:
