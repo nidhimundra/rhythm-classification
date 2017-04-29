@@ -11,8 +11,8 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
-from sklearn.svm import LinearSVC
 from sklearn.pipeline import Pipeline
+from sklearn.svm import LinearSVC
 
 from feature_generator import FeatureGenerator
 from preprocessor import Preprocessor
@@ -47,31 +47,62 @@ class ECGClassifier:
         clf_1 = AdaBoostClassifier()
         base_classifier_1 = RandomForestClassifier()
 
-        params = {
+        # Best
+        # Classifier
+        # 1
+        # {'n_estimators': 40,
+        #  'base_estimator': RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
+        #                                           max_depth=None, max_features='auto', max_leaf_nodes=None,
+        #                                           min_impurity_split=1e-07, min_samples_leaf=1,
+        #                                           min_samples_split=2, min_weight_fraction_leaf=0.0,
+        #                                           n_estimators=10, n_jobs=1, oob_score=False, random_state=None,
+        #                                           verbose=0, warm_start=False), 'learning_rate': 0.85000000000000009}
+        # Best
+        # Classifier
+        # 2
+        # {'n_estimators': 30,
+        #  'base_estimator': RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
+        #                                           max_depth=None, max_features='auto', max_leaf_nodes=None,
+        #                                           min_impurity_split=1e-07, min_samples_leaf=1,
+        #                                           min_samples_split=2, min_weight_fraction_leaf=0.0,
+        #                                           n_estimators=10, n_jobs=1, oob_score=False, random_state=None,
+        #                                           verbose=0, warm_start=False), 'learning_rate': 0.80000000000000004}
+
+        # params = {
+        #     "base_estimator": [base_classifier_1],
+        #     "n_estimators": range(30, 61, 10),
+        #     "learning_rate": np.arange(0.8, 1.01, 0.05),
+        # }
+        optimal_params = {
             "base_estimator": [base_classifier_1],
-            "n_estimators": range(30, 61, 10),
-            "learning_rate": np.arange(0.8, 1.01, 0.05),
+            'n_estimators': [40],
+            'learning_rate': [0.85000000000000009]
         }
 
-        self.classifier_1 = GridSearchCV(clf_1, param_grid=params,
-                                         cv=10, scoring=make_scorer(self.scorer.score))
+        self.classifier_1 = GridSearchCV(clf_1, param_grid=optimal_params,
+                                         cv=10, scoring=make_scorer(self.scorer.score), verbose=10)
 
         clf_2 = AdaBoostClassifier()
         base_classifier_2 = RandomForestClassifier()
 
-        params = {
+        # params = {
+        #     "base_estimator": [base_classifier_2],
+        #     "n_estimators": range(30, 61, 10),
+        #     "learning_rate": np.arange(0.8, 1.01, 0.05),
+        # }
+
+        optimal_params = {
             "base_estimator": [base_classifier_2],
-            "n_estimators": range(30, 61, 10),
-            "learning_rate": np.arange(0.8, 1.01, 0.05),
+            'n_estimators': [30],
+            'learning_rate': [0.80000000000000004]
         }
 
-        self.classifier_2 = GridSearchCV(clf_2, param_grid=params,
-                                         cv=2, scoring=make_scorer(self.scorer.score))
+        self.classifier_2 = GridSearchCV(clf_2, param_grid=optimal_params,
+                                         cv=2, scoring=make_scorer(self.scorer.score), verbose=10)
 
         # Pipeline initializations
         self.pipeline_1 = Pipeline([('feature_selector', self.feature_selector_1), ('clf', self.classifier_1)])
         self.pipeline_2 = Pipeline([('feature_selector', self.feature_selector_2), ('clf', self.classifier_2)])
-
 
     def fit(self, X, Y, filenames):
         """
@@ -87,7 +118,13 @@ class ECGClassifier:
         self.pipeline_1.fit(X1, Y1)
         self.pipeline_2.fit(X2, Y2)
 
-    def predict(self, X):
+        print "Best Classifier 1"
+        print self.classifier_1.best_params_
+
+        print "Best Classifier 2"
+        print self.classifier_2.best_params_
+
+    def predict(self, X, file_names):
         """
         Predict test labels
         
@@ -96,12 +133,12 @@ class ECGClassifier:
         :return: Return predicted output labels
         """
 
-        X1, I1, X2, I2 = self.__transform__(X, 'test')
+        X1, I1, X2, I2 = self.__transform__(X, file_names, 'test')
         Y1 = self.pipeline_1.predict(X1)
         Y2 = self.pipeline_2.predict(X2)
         return self.__merge__(Y1, Y2, I1, I2)
 
-    def score(self, X, Y):
+    def score(self, X, Y, file_names):
         """
         Predict and compute the accuracy score
         
@@ -109,7 +146,7 @@ class ECGClassifier:
         
         :param Y: Actual labels of test data 
         """
-        predicted_Y = self.predict(X)
+        predicted_Y = self.predict(X, file_names)
         return self.scorer.score(predicted_Y, Y)
 
     def __transform__(self, X, filenames, prefix='training'):
@@ -229,10 +266,10 @@ class ECGClassifier:
         """
         output = np.zeros(len(Y1) + len(Y2))
 
-        for i in I1:
-            output[i] = Y1[i]
+        for i in range(0, len(I1)):
+            output[I1[i]] = Y1[i]
 
-        for i in I2:
-            output[i] = Y2[i]
+        for i in range(0, len(I2)):
+            output[I2[i]] = Y2[i]
 
         return output
