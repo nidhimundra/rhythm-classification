@@ -48,18 +48,27 @@ class Preprocessor:
         # features and prediction of left outliers. left_part contains an array of the indexes that need to be
         # elminated if prediction == 1
         left_feat, left_part = self.get_features_outliers(data, left=0.2)
-        left_pred = self.left_outlier_model.predict(left_feat)
+        try:
+            left_pred = self.left_outlier_model.predict(left_feat)
+        except:
+            left_pred = [1]
 
         # features and prediction of right outliers. right_part contains an array of the indexes that need to be
         # elminated if prediction == 1
         right_feat, right_part = self.get_features_outliers(data, left=0.9)
-        right_pred = self.right_outlier_model.predict(right_feat)
+        try:
+            right_pred = self.right_outlier_model.predict(right_feat)
+        except:
+            # TODO GOES HERE AT FILE A07331
+            right_pred = [1]
 
         # features and prediction of middle outliers. k_means_points contains an array of the indexes that need to be
         # elminated if prediction == 1
         middle_feat, k_means_data, k_means_points = self.get_features_outliers_middle(data)
-        middle_pred = self.middle_outlier_model.predict(middle_feat)
-
+        try:
+            middle_pred = self.middle_outlier_model.predict(middle_feat)
+        except:
+            middle_pred = [1]
         # append the the parts that need to be deleted if predicted to contain outliers
         to_delete = []
         if left_pred[0] == 1:
@@ -365,8 +374,17 @@ class Preprocessor:
 
         count_up = len(up)
         count_down = len(down)
-        std_up = np.std(up)
-        std_down = np.std(down)
+
+        if up != []:
+            std_up = np.std(up)
+        else:
+            std_up = 0.0
+
+        if down != []:
+            std_down = np.std(down)
+        else:
+            std_down = 0.0
+
         sum_up = np.std(up)
         sum_down = np.std(down)
 
@@ -403,8 +421,17 @@ class Preprocessor:
 
         count_up_left = len(up_left)
         count_down_left = len(down_left)
-        std_up_left = np.std(up_left)
-        std_down_left = np.std(down_left)
+
+        if up_left != []:
+            std_up_left = np.std(up_left)
+        else:
+            std_up_left = 0.0
+
+        if down_left != []:
+            std_down_left = np.std(down_left)
+        else:
+            std_down_left = 0.0
+
         sum_up_left = np.std(up_left)
         sum_down_left = np.std(down_left)
 
@@ -422,8 +449,17 @@ class Preprocessor:
 
         count_up_right = len(up_right)
         count_down_right = len(down_right)
-        std_up_right = np.std(up_right)
-        std_down_right = np.std(down_right)
+
+        if up_right != []:
+            std_up_right = np.std(up_right)
+        else:
+            std_up_right = 0.0
+
+        if down_right != []:
+            std_down_right = np.std(down_right)
+        else:
+            std_down_right = 0.0
+
         sum_up_right = np.std(up_right)
         sum_down_right = np.std(down_right)
 
@@ -470,10 +506,26 @@ class Preprocessor:
 
             points.append(len(up))
             points.append(len(down))
-            points.append(np.std(up))
-            points.append(np.std(down))
-            points.append(np.std(up))
-            points.append(np.std(down))
+            if up != []:
+                points.append(np.std(up))
+            else:
+                points.append(0.0)
+
+            if down != []:
+                points.append(np.std(down))
+            else:
+                points.append(0.0)
+
+            if up != []:
+                points.append(np.std(up))
+            else:
+                points.append(0.0)
+
+            if down != []:
+                points.append(np.std(down))
+            else:
+                points.append(0.0)
+
             start += part
             features += points
             k_means_data.append(points)
