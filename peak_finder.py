@@ -412,7 +412,15 @@ class PeakFinder:
             # get the next outlier
             out_i, val_out = self.__next__(out_i, outliers)
 
-        self.r_peaks = r_peaks
+        index = -1
+        new_r_peaks = []
+        for one_peak in r_peaks:
+
+            if index < one_peak:
+                index = one_peak
+                new_r_peaks.append(one_peak)
+
+        self.r_peaks = new_r_peaks
 
     def get_peaks_data(self):
         """
