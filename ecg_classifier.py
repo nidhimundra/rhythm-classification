@@ -1,3 +1,7 @@
+"""
+ Created by Nidhi Mundra on 25/04/17.
+"""
+
 import cPickle
 import gc
 import os
@@ -36,22 +40,38 @@ class ECGClassifier:
         self.scorer = make_scorer(Scorer().score, greater_is_better=True)
 
         # Feature selection model
-        self.feature_selector = SelectKBest(f_regression, k=5)
+        self.feature_selector_1 = SelectKBest(f_regression, k=5)
+        self.feature_selector_2 = SelectKBest(f_regression, k=5)
 
         # Classification model
-        clf = AdaBoostClassifier()
-        base_classifier = RandomForestClassifier()
+        clf_1 = AdaBoostClassifier()
+        base_classifier_1 = RandomForestClassifier()
 
         params = {
-            "base_estimator": [base_classifier],
+            "base_estimator": [base_classifier_1],
             "n_estimators": range(30, 61, 10),
             "learning_rate": np.arange(0.8, 1.01, 0.05),
         }
 
-        self.classifier = GridSearchCV(clf, param_grid=params, cv=10, scoring=self.scorer)
+        self.classifier_1 = GridSearchCV(clf_1, param_grid=params, cv=10, scoring=self.scorer)
+
+        clf_2 = AdaBoostClassifier()
+        base_classifier_2 = RandomForestClassifier()
+
+        params = {
+            "base_estimator": [base_classifier_2],
+            "n_estimators": range(30, 61, 10),
+            "learning_rate": np.arange(0.8, 1.01, 0.05),
+        }
+
+        self.classifier_2 = GridSearchCV(clf_2, param_grid=params, cv=10, scoring=self.scorer)
 
         # Pipeline initialization
-        self.pipeline = Pipeline([('feature_selector', self.feature_selector), ('clf', self.classifier)])
+        # self.pipeline_1 = Pipeline([('feature_selector', self.feature_selector_1), ('clf', self.classifier_1)])
+        # self.pipeline_2 = Pipeline([('feature_selector', self.feature_selector_2), ('clf', self.classifier_2)])
+
+        self.pipeline_1 = self.classifier_1
+        self.pipeline_2 = self.classifier_2
 
     def fit(self, X, Y):
         """
@@ -62,8 +82,10 @@ class ECGClassifier:
         :param Y: Training labels 
         """
 
-        X = self.__transform__(X, 'training')
-        self.pipeline.fit(X, Y)
+        X1, I1, X2, I2 = self.__transform__(X, 'training')
+        Y1, Y2 = self.__get_feature_labels__(Y, I1, I2)
+        self.pipeline_1.fit(X1, Y1)
+        self.pipeline_2.fit(X2, Y2)
 
     def predict(self, X):
         """
@@ -75,7 +97,10 @@ class ECGClassifier:
         """
 
         X = self.__transform__(X, 'test')
-        return self.pipeline.predict(X)
+        X1, I1, X2, I2 = self.__transform__(X, 'training')
+        Y1 = self.pipeline_1.predict(X1)
+        Y2 = self.pipeline_2.predict(X2)
+        return self.__merge__(Y1, Y2, I1, I2)
 
     def score(self, X, Y):
         """
@@ -98,36 +123,114 @@ class ECGClassifier:
         """
 
         # Return data from pickle files if it was transformed once
-        if os.path.isfile("pickle_files/" + prefix + "_data.pickle"):
+        if os.path.isfile("pickle_files/" + prefix + "_peak_data.pickle"):
             # Fetch data points
-            with open("pickle_files/" + prefix + "_data.pickle", "rb") as handle:
-                transformed_X = cPickle.load(handle)
+            with open("pickle_files/" + prefix + "_peak_data.pickle", "rb") as handle:
+                peak_features = cPickle.load(handle)
 
-            return transformed_X
+            with open("pickle_files/" + prefix + "_point_data.pickle", "rb") as handle:
+                point_features = cPickle.load(handle)
+
+            with open("pickle_files/" + prefix + "_peak_indices.pickle", "rb") as handle:
+                peak_indices = cPickle.load(handle)
+
+            with open("pickle_files/" + prefix + "_point_indices.pickle", "rb") as handle:
+                point_indices = cPickle.load(handle)
+
+            return [peak_features[1:-1], peak_indices[1:-1], point_features[1:-1], point_indices[1:-1]]
 
         # Initializing output labels
-        transformed_X = []
+        peak_features = []
+        peak_indices = []
+        point_features = []
+        point_indices = []
 
-        for data in X:
-            # try:
+        for i in xrange(len(X)):
+
+            data = X[i]
 
             # Remove outlier sections from the wave
             data, outliers = self.preprocessor.process(data)
 
             # Append the features of the transformed wave in the final output array
-            transformed_X.append(self.feature_generator.get_features(data, outliers))
-            # except:
-            #     pyplot.close("all")
-            #     peakfinder = PeakFinder(data, [])
-            #     peakfinder.plot("original")
-            #     # Append zeros in case of erroneous wave
-            #     transformed_X.append(np.zeros(400))
-                # TODO: Do normal classification here - use rolling mean, std, var, max, min, etc  - Nidhi
+            features, type = self.feature_generator.get_features(data, outliers)
+
+            if type == "peak":
+                print "peak", i
+                peak_features.append(features)
+                peak_indices.append(i)
+            else:
+                print "point", i
+                point_features.append(features)
+                point_indices.append(i)
 
         # Store the data in pickle files
         gc.disable()
-        with open("pickle_files/" + prefix + '_data.pickle', 'wb') as handle:
-            cPickle.dump(transformed_X, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+        with open("pickle_files/" + prefix + '_peak_data.pickle', 'wb') as handle:
+            cPickle.dump(peak_features, handle, protocol=cPickle.HIGHEST_PROTOCOL)
         gc.enable()
 
-        return transformed_X
+        gc.disable()
+        with open("pickle_files/" + prefix + '_point_data.pickle', 'wb') as handle:
+            cPickle.dump(peak_features, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+        gc.enable()
+
+        gc.disable()
+        with open("pickle_files/" + prefix + '_peak_indices.pickle', 'wb') as handle:
+            cPickle.dump(peak_indices, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+        gc.enable()
+
+        gc.disable()
+        with open("pickle_files/" + prefix + '_point_indices.pickle', 'wb') as handle:
+            cPickle.dump(peak_indices, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+        gc.enable()
+
+        return [peak_features[1:-1], peak_indices[1:-1], point_features[1:-1], point_indices[1:-1]]
+
+    def __get_feature_labels__(self, Y, I1, I2):
+        """
+        Get feature labels for corresponding index arrays
+        
+        :param Y: Output labels array
+        
+        :param I1: Index Array 
+        
+        :param I2: Index Array
+        
+        :return: Corresponding label arrays
+        """
+        Y1 = []
+        Y2 = []
+
+        for i in I1:
+            Y1.append(Y[i])
+
+        for i in I2:
+            Y2.append(Y[i])
+
+        return [Y1, Y2]
+
+    def __merge__(self, Y1, Y2, I1, I2):
+
+        """
+        Merge two output labels arrays using index arrays
+        
+        :param Y1: Labels array
+         
+        :param Y2: Labels array
+        
+        :param I1: Index array
+         
+        :param I2: Index array
+        
+        :return: Merged output labels array 
+        """
+        output = np.zeros(len(Y1) + len(Y2))
+
+        for i in I1:
+            output[i] = Y1[i]
+
+        for i in I2:
+            output[i] = Y2[i]
+
+        return output

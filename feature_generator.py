@@ -7,12 +7,14 @@ from scipy.stats import skew
 from sklearn.cluster import KMeans
 
 from peak_finder import PeakFinder
+from rolling_stats_calculator import RollingStatsCalculator
 from basic_peak_finder import BasicPeakFinder
 
 
 class FeatureGenerator:
     def __init__(self):
-        pass
+        # Initialize stats calculator
+        self.rolling_stats_calculator = RollingStatsCalculator()
 
     def __get_data_between_peaks__(self, first_peak, second_peak):
         """
@@ -53,10 +55,7 @@ class FeatureGenerator:
             new_data = self.__get_data_between_peaks__(self.r_peaks[i], self.r_peaks[i + 1])
 
             distances.append(distance)
-            try:
-                r_peaks.append(new_data[0])
-            except:
-                pass
+            r_peaks.append(new_data[0])
 
             # Extract features of wavelet
             feature_matrix.append(self.__get_wavelet_features__(distance, new_data))
@@ -178,7 +177,6 @@ class FeatureGenerator:
         features = np.append(features, np.mean(distances))
         features = np.append(features, np.std(distances))
 
-
         # Compute overall wave features and appened them in the main array
         feature_matrix = np.array(feature_matrix)
         for i in xrange(len(feature_matrix[0])):
@@ -199,7 +197,32 @@ class FeatureGenerator:
         """
         # Get peaks and data of the given wave
         # self.r_peaks, self.data = BasicPeakFinder(data).get_peaks_data()
-        self.r_peaks, self.data = PeakFinder(data).get_peaks_data()
+        self.r_peaks, self.data = PeakFinder(data, outliers).get_peaks_data()
 
-        # Get features from the extracted peaks and data
-        return self.__generate_features__()
+        """
+        If the number of peaks are sufficient, then generate peak features
+        Else, create features from the wave data  
+        """
+        if len(self.r_peaks) > 1:
+            # Get features from the extracted peaks and data
+            return [self.__generate_features__(), "peak"]
+        else:
+            self.data = data[100:500]
+            # Get features from the data
+            return [self.__generate_rolling_features__(), "points"]
+
+    def __generate_rolling_features__(self):
+
+        """
+        Generate rolling features of data 
+        :return: Array containing all the features
+        """
+        return self.rolling_stats_calculator.rolling_mean(self.data) \
+               + self.rolling_stats_calculator.rolling_kurt(self.data) \
+               + self.rolling_stats_calculator.rolling_max(self.data) \
+               + self.rolling_stats_calculator.rolling_min(self.data) \
+               + self.rolling_stats_calculator.rolling_sum(self.data) \
+               + self.rolling_stats_calculator.rolling_var(self.data) \
+               + self.rolling_stats_calculator.rolling_std(self.data) \
+               + self.rolling_stats_calculator.rolling_skew(self.data) \
+               + self.rolling_stats_calculator.rolling_count(self.data)
