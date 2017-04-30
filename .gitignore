@@ -9,7 +9,7 @@ __pycache__/
 # Data
 plots/
 training2017/
-peakutils/
+#peakutils/
 
 # Distribution / packaging
 .Python
