@@ -7,8 +7,8 @@ import gc
 import os
 
 import numpy as np
-#from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
+# from sklearn.tree import DecisionTreeClassifier
 from sklearn.feature_selection import SelectFromModel
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
@@ -45,21 +45,19 @@ class ECGClassifier:
         self.feature_selector_2 = SelectFromModel(LinearSVC(penalty="l1", dual=False))
 
         # Classification models
-        clf_1 = DecisionTreeClassifier()
+        # clf_1 = DecisionTreeClassifier()
+        #
+        # params = {"criterion": ["gini", "entropy"],
+        #           "min_samples_split": [2, 10, 20],
+        #           "max_depth": [None, 2, 5, 10],
+        #           "min_samples_leaf": [1, 5, 10],
+        #           "max_leaf_nodes": [None, 5, 10, 20],
+        #           }
 
-        params = {"criterion": ["gini", "entropy"],
-                  "min_samples_split": [2, 10, 20],
-                  "max_depth": [None, 2, 5, 10],
-                  "min_samples_leaf": [1, 5, 10],
-                  "max_leaf_nodes": [None, 5, 10, 20],
-                  }
+        clf_1 = AdaBoostClassifier()
+        base_classifier_1 = RandomForestClassifier()
 
-        # clf_1 = AdaBoostClassifier()
-        # base_classifier_1 = RandomForestClassifier()
-
-        # Best
-        # Classifier
-        # 1
+        # Best Classifier 1
         # {'n_estimators': 40,
         #  'base_estimator': RandomForestClassifier(bootstrap=True, class_weight=None, criterion='gini',
         #                                           max_depth=None, max_features='auto', max_leaf_nodes=None,
@@ -83,18 +81,18 @@ class ECGClassifier:
         #     "n_estimators": range(30, 61, 10),
         #     "learning_rate": np.arange(0.8, 1.01, 0.05),
         # }
-        # optimal_params = {
-        #     "base_estimator": [base_classifier_1],
-        #     'n_estimators': [40],
-        #     'learning_rate': [0.85000000000000009]
-        # }
+        optimal_params = {
+            "base_estimator": [base_classifier_1],
+            'n_estimators': [40],
+            'learning_rate': [0.85000000000000009]
+        }
 
-        self.classifier_1 = GridSearchCV(clf_1, param_grid=params,
+        self.classifier_1 = GridSearchCV(clf_1, param_grid=optimal_params,
                                          cv=10, scoring=make_scorer(self.scorer.score), verbose=10)
 
-        clf_2 = DecisionTreeClassifier()
-        # clf_2 = AdaBoostClassifier()
-        # base_classifier_2 = RandomForestClassifier()
+        # clf_2 = DecisionTreeClassifier()
+        clf_2 = AdaBoostClassifier()
+        base_classifier_2 = RandomForestClassifier()
 
         # params = {
         #     "base_estimator": [base_classifier_2],
@@ -102,19 +100,19 @@ class ECGClassifier:
         #     "learning_rate": np.arange(0.8, 1.01, 0.05),
         # }
 
-        # optimal_params = {
-        #     "base_estimator": [base_classifier_2],
-        #     'n_estimators': [30],
-        #     'learning_rate': [0.80000000000000004]
-        # }
+        optimal_params = {
+            "base_estimator": [base_classifier_2],
+            'n_estimators': [30],
+            'learning_rate': [0.80000000000000004]
+        }
 
-        params = {"criterion": ["gini", "entropy"],
-                  "min_samples_split": [2, 10, 20],
-                  "max_depth": [None, 2, 5, 10],
-                  "min_samples_leaf": [1, 5, 10],
-                  "max_leaf_nodes": [None, 5, 10, 20],
-                  }
-        self.classifier_2 = GridSearchCV(clf_2, param_grid=params,
+        # params = {"criterion": ["gini", "entropy"],
+        #           "min_samples_split": [2, 10, 20],
+        #           "max_depth": [None, 2, 5, 10],
+        #           "min_samples_leaf": [1, 5, 10],
+        #           "max_leaf_nodes": [None, 5, 10, 20],
+        #           }
+        self.classifier_2 = GridSearchCV(clf_2, param_grid=optimal_params,
                                          cv=2, scoring=make_scorer(self.scorer.score), verbose=10)
 
         # Pipeline initializations
@@ -134,12 +132,6 @@ class ECGClassifier:
         Y1, Y2 = self.__get_feature_labels__(Y, I1, I2)
         self.pipeline_1.fit(X1, Y1)
         self.pipeline_2.fit(X2, Y2)
-
-        print "Best Classifier 1"
-        print self.classifier_1.best_params_
-
-        print "Best Classifier 2"
-        print self.classifier_2.best_params_
 
     def predict(self, X, file_names):
         """

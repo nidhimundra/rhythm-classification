@@ -6,6 +6,7 @@ import numpy as np
 from scipy.stats import skew
 from sklearn.cluster import KMeans
 
+from basic_peak_finder import BasicPeakFinder
 from peak_finder import PeakFinder
 from rolling_stats_calculator import RollingStatsCalculator
 
@@ -176,7 +177,7 @@ class FeatureGenerator:
         features = np.append(features, np.mean(distances))
         features = np.append(features, np.std(distances))
 
-        # Compute overall wave features and appened them in the main array
+        # Compute overall wave features and appended them in the main array
         feature_matrix = np.array(feature_matrix)
         for i in xrange(len(feature_matrix[0])):
             features = np.append(features, np.max(feature_matrix[:, i]))
