@@ -58,6 +58,18 @@ class Scorer:
         
         :return: Prediction Score 
         """
+
+        self.labels = [0, 1, 2, 3]
+
+        # Dictionary to store count of each label in predicted labels list
+        self.total_prediction_count = {0: 0, 1: 0, 2: 0, 3: 0}
+
+        # Dictionary to store count of each label in actual labels list
+        self.total_actual_count = {0: 0, 1: 0, 2: 0, 3: 0}
+
+        # Dictionary to store count of correctly predicted labels
+        self.total_correct_prediction_count = {0: 0, 1: 0, 2: 0, 3: 0}
+
         for i in xrange(len(predicted_y)):
             # Extract predicted and actual labels for ith record
             predicted_label = predicted_y[i]
