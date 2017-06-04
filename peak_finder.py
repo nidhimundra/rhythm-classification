@@ -128,9 +128,13 @@ class PeakFinder:
         # Initialize the output
         all_peaks_values = []
 
+
         # Store the data value of all the R peak indices
-        for i in self.r_peaks:
-            all_peaks_values.append(self.data[i])
+        for i in range(0, len(self.r_peaks)):
+            if self.r_peaks[i] >= len(self.data):
+                # TODO this is a hack. File A03017 and maybe others after this somehow have peaks outside of the range. Find out why...
+                self.r_peaks[i] = len(self.data) - 1
+            all_peaks_values.append(self.data[self.r_peaks[i]])
 
         # Transpose the data to perform clustering of each peak
         x = np.array([all_peaks_values]).T
@@ -451,7 +455,7 @@ class PeakFinder:
         pyplot.title(title)
 
 
-def plot(title, data):
+def plot(title, data, peaks=[0]):
     """
     Plot the ECG wave using self.data
 
@@ -459,11 +463,12 @@ def plot(title, data):
     """
 
     # Data to be plotted
+    pyplot.close("all")
     y = np.linspace(0, len(data) - 1, len(data))
 
     pyplot.figure(figsize=(10, 6))
 
     # Plot using pplot library
-    pplot(y, data, [0])
+    pplot(y, data, peaks)
 
     pyplot.title(title)

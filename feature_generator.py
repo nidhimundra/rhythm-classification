@@ -2,11 +2,12 @@
  Created by Nidhi Mundra on 25/04/17.
 """
 
+import copy
+
 import numpy as np
 from scipy.stats import skew
-from sklearn.cluster import KMeans
+from sklearn.linear_model import LinearRegression
 
-from basic_peak_finder import BasicPeakFinder
 from peak_finder import PeakFinder
 from rolling_stats_calculator import RollingStatsCalculator
 
@@ -61,6 +62,14 @@ class FeatureGenerator:
             feature_matrix.append(self.__get_wavelet_features__(distance, new_data))
 
         # Combine wavelet features to generate features of the whole wave
+
+        for i in range(0, len(feature_matrix)):
+            for j in range(0, len(feature_matrix[0])):
+                try:
+                    feature_matrix[i][j] = float(feature_matrix[i][j])
+                except:
+                    print ""
+
         return self.__get_wave_features__(feature_matrix, r_peaks, distances)
 
     def __get_intermediate_peak_distances__(self, distance, data):
@@ -85,6 +94,193 @@ class FeatureGenerator:
 
         return [0, s_len, st_len, t_len, u_len, p_len, pr_len, q_len]
 
+    def __inner_peak_picking__(self, distance, data):
+        data = np.array(data)
+        old_data = copy.deepcopy(data)
+        data, first_min, last_min = self.__delete_r_peaks(data)
+        left_max, right_max = self.__get_inbetween_peaks__(data)
+
+        if first_min == None:
+            first_min = 0
+        if last_min == None:
+            last_min = len(data) - 1
+        if left_max == None:
+            left_max = 0
+        if right_max == None:
+            right_max = len(data) - 1
+
+        # peaks = peakutils.indexes(data, thres=0.46, min_dist=30)
+        # peak_finder.plot("intermediate", old_data, [0])
+        peaks = np.array([0, int(first_min), int(left_max + first_min), int(right_max + first_min), int(last_min),
+                          len(old_data) - 1])
+        # peak_finder.plot("intermediate", old_data, peaks)
+
+
+        rstpqr_features = self.__get_rstpqr_features(old_data, peaks)
+        return rstpqr_features
+
+        # print "here"
+
+    def __get_rstpqr_features(self, data, peaks):
+        features = []
+        for i in range(0, len(peaks) - 1):
+            features = np.append(features, self.__generate_peakwise_rstpqr_features__(data, peaks[i], peaks[i + 1]))
+        return features
+
+    def __generate_peakwise_rstpqr_features__(self, data, left, right):
+        features = []
+        interdata = data[left: right]
+        features = np.append(features, [data[left], data[right]])  # the value of the peaks on the y axis
+        features = np.append(features, right - left)  # distance between the two peaks
+        features = np.append(features, abs(data[left] - data[right]))  # difference in height between the two peaks
+        # if (left == right):
+        #     print ""
+        extrema_from_left = self.__get_next_extrema__(data, left, forward=True)
+        extrema_from_right = self.__get_next_extrema__(data, right, forward=False)
+
+        if (None in features) | (extrema_from_right == None) | (extrema_from_left == None):
+            features = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+        else:
+            features = np.append(features, [data[extrema_from_left], data[extrema_from_right]])
+            features = np.append(features, left - extrema_from_left)
+            features = np.append(features, extrema_from_left - extrema_from_right)
+            features = np.append(features, extrema_from_right - right)
+            features = np.append(features, np.std(interdata))
+            features = np.append(features, np.mean(interdata))
+            lr = LinearRegression()
+            try:
+                lr.fit(np.array(range(0, len(interdata))).reshape((len(interdata), 1)),
+                       interdata.reshape((len(interdata), 1)))
+                # params = lr.get_params(deep=True)
+                features = np.append(features, lr.coef_)
+                features = np.append(features, lr.residues_)
+            except:
+                features = np.append(features, 0.0)
+                features = np.append(features, 0.0)
+
+        # if (None in features) | (len(features) != 13) | (extrema_from_right == None) | (extrema_from_left == None) :
+        #     features = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        if len(features) != 13:
+            features = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        return features
+
+    def __extrema__(self, data, point):
+        if (point == 0):
+            return self.__right_extrema__(data, point)
+        elif (point == len(data) - 1):
+            return self.__left_extrema__(data, len(data) - 1)
+        else:
+            left = self.__left_extrema__(data, point)
+            right = self.__right_extrema__(data, point)
+            if left == right:
+                return left
+            else:
+                return left + right
+
+    def __right_extrema__(self, data, point):
+
+        i = point + 1
+        while i < len(data):
+            if data[point] < data[i]:
+                return "MAX"
+            elif data[point] > data[i]:
+                return "MIN"
+            i += 1
+        return "MAX"
+
+    def __left_extrema__(self, data, point):
+
+        i = point - 1
+        while i >= 0:
+            if data[point] < data[i]:
+                return "MAX"
+            elif data[point] > data[i]:
+                return "MIN"
+            i -= 1
+
+    def __get_next_extrema__(self, data, point, forward):
+
+        extrema = self.__extrema__(data, point)
+
+        if forward is True:
+            iterator = range(point, len(data))
+            if extrema == "MINMAX":
+                extrema = "MAX"
+            elif extrema == "MAXMIN":
+                extrema = "MIN"
+        else:
+            iterator = range(point, 0, -1)
+            if extrema == "MINMAX":
+                extrema = "MIN"
+            elif extrema == "MAXMIN":
+                extrema = "MAX"
+
+        if extrema == "MAX":
+            maximum = data[point]
+            for i in iterator:
+                if maximum < data[i]:
+                    if forward is True:
+                        return i - 1
+                    return i + 1
+                maximum = data[i]
+
+        elif extrema == "MIN":
+            minimum = data[point]
+            for i in iterator:
+                if minimum > data[i]:
+                    if forward is True:
+                        return i - 1
+                    return i + 1
+                minimum = data[i]
+
+    def __get_inbetween_peaks__(self, data):
+        length = len(data)
+        left_max = self.__inbetween_peak__(data, 0, int(length / 2))
+        right_max = self.__inbetween_peak__(data, int(length / 2), length)
+        return left_max, right_max
+
+    def __inbetween_peak__(self, data, left, right):
+
+        argmax = 0
+        max = -999999
+        current_max = -999999
+        for i in range(left, right):
+            if data[i] >= current_max:
+                current_max = data[i]
+            elif data[i] < current_max:
+                if current_max > max:
+                    max = current_max
+                    argmax = i - 1
+                current_max = data[i]
+        if argmax == 0:
+            return int(left + (right - left) / 2)
+        return argmax
+
+    def __delete_r_peaks(self, data):
+        first_min = self.__find_first_min__(data)
+        last_min = self.__find_last_min__(data)
+        return data[first_min:last_min], first_min, last_min
+
+    def __find_first_min__(self, data):
+        current_min = 999999999999
+        for i in range(0, len(data)):
+            if data[i] <= current_min:
+                current_min = data[i]
+            else:
+                return i - 1
+
+    def __find_last_min__(self, data):
+        current_min = 999999999999
+        for i in range(-len(data) + 1, 0):
+            if data[-i] <= current_min:
+                current_min = data[-i]
+            else:
+                return -i + 1
+
+
+
+
     def __get_wavelet_features__(self, distance, data):
 
         """
@@ -99,7 +295,7 @@ class FeatureGenerator:
 
         # Initialize output array
         inner_features = []
-
+        inner_features = self.__inner_peak_picking__(distance, data).tolist()
         # Compute distances between the intermediate peaks
         peak_distances = self.__get_intermediate_peak_distances__(distance, data)
 
@@ -161,11 +357,11 @@ class FeatureGenerator:
         # Find different clusters of the wavelet features
         # Append the cluster means to the main features array
 
-        k = 3
-        if len(feature_matrix) > k:
-            estimator = KMeans(n_clusters=k)
-            estimator.fit(feature_matrix)
-            features = estimator.cluster_centers_.flatten()
+        # k = 3
+        # if len(feature_matrix) > k:
+        #     estimator = KMeans(n_clusters=k)
+        #     estimator.fit(feature_matrix)
+        #     features = estimator.cluster_centers_.flatten()
 
         # Compute features based on the r_peaks and distances
         features = np.append(features, np.max(r_peaks))
