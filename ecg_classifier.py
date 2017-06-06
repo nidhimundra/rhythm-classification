@@ -12,8 +12,8 @@ from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
 from sklearn.feature_selection import SelectFromModel
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import GridSearchCV
-from sklearn.svm import LinearSVC
 from sklearn.pipeline import Pipeline
+from sklearn.svm import LinearSVC
 
 from feature_generator import FeatureGenerator
 from preprocessor import Preprocessor
@@ -130,6 +130,7 @@ class ECGClassifier:
 
         X1, I1, X2, I2 = self.__transform__(X, filenames, 'training')
         Y1, Y2 = self.__get_feature_labels__(Y, I1, I2)
+
         self.pipeline_1.fit(X1, Y1)
         self.pipeline_2.fit(X2, Y2)
 
@@ -158,6 +159,21 @@ class ECGClassifier:
         predicted_Y = self.predict(X, file_names)
         return self.scorer.score(predicted_Y, Y)
 
+    def __replace_missing_values__(self, matrix, value):
+        for i in range(0, len(matrix)):
+            for j in range(0, len(matrix[i])):
+                # if matrix[i][j] == None:
+                #     matrix[i][j] = np.mean(matrix[:i])
+                # matrix[i][j] = float(matrix[i][j])
+                if np.isnan(matrix[i][j]):
+                    matrix[i][j] = np.nanmean(matrix[:j])
+                if not np.isfinite(matrix[i][j]):
+                    matrix[i][j] = np.nanmean(matrix[:j])
+        return matrix
+
+
+
+
     def __transform__(self, X, filenames, prefix='training'):
         """
         Transforms the provided waves data into array containing features of each wave
@@ -181,7 +197,7 @@ class ECGClassifier:
 
             with open("pickle_files/" + prefix + "_point_indices.pickle", "rb") as handle:
                 point_indices = cPickle.load(handle)
-
+            peak_features = self.__replace_missing_values__(peak_features, "average")
             return [peak_features, peak_indices, point_features, point_indices]
 
         # Initializing output labels

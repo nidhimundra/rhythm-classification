@@ -176,6 +176,10 @@ class FeatureGenerator:
             if left == right:
                 return left
             else:
+                if left == None:
+                    left = ""
+                if right == None:
+                    right = ""
                 return left + right
 
     def __right_extrema__(self, data, point):
@@ -234,50 +238,50 @@ class FeatureGenerator:
                     return i + 1
                 minimum = data[i]
 
-    def __get_inbetween_peaks__(self, data):
-        length = len(data)
-        left_max = self.__inbetween_peak__(data, 0, int(length / 2))
-        right_max = self.__inbetween_peak__(data, int(length / 2), length)
-        return left_max, right_max
-
-    def __inbetween_peak__(self, data, left, right):
-
-        argmax = 0
-        max = -999999
-        current_max = -999999
-        for i in range(left, right):
-            if data[i] >= current_max:
-                current_max = data[i]
-            elif data[i] < current_max:
-                if current_max > max:
-                    max = current_max
-                    argmax = i - 1
-                current_max = data[i]
-        if argmax == 0:
-            return int(left + (right - left) / 2)
-        return argmax
-
-    def __delete_r_peaks(self, data):
-        first_min = self.__find_first_min__(data)
-        last_min = self.__find_last_min__(data)
-        return data[first_min:last_min], first_min, last_min
-
-    def __find_first_min__(self, data):
-        current_min = 999999999999
-        for i in range(0, len(data)):
-            if data[i] <= current_min:
-                current_min = data[i]
-            else:
-                return i - 1
-
-    def __find_last_min__(self, data):
-        current_min = 999999999999
-        for i in range(-len(data) + 1, 0):
-            if data[-i] <= current_min:
-                current_min = data[-i]
-            else:
-                return -i + 1
-
+    # def __get_inbetween_peaks__(self, data):
+    #     length = len(data)
+    #     left_max = self.__inbetween_peak__(data, 0, int(length / 2))
+    #     right_max = self.__inbetween_peak__(data, int(length / 2), length)
+    #     return left_max, right_max
+    #
+    # def __inbetween_peak__(self, data, left, right):
+    #
+    #     argmax = 0
+    #     max = -999999
+    #     current_max = -999999
+    #     for i in range(left, right):
+    #         if data[i] >= current_max:
+    #             current_max = data[i]
+    #         elif data[i] < current_max:
+    #             if current_max > max:
+    #                 max = current_max
+    #                 argmax = i - 1
+    #             current_max = data[i]
+    #     if argmax == 0:
+    #         return int(left + (right - left) / 2)
+    #     return argmax
+    #
+    # def __delete_r_peaks(self, data):
+    #     first_min = self.__find_first_min__(data)
+    #     last_min = self.__find_last_min__(data)
+    #     return data[first_min:last_min], first_min, last_min
+    #
+    # def __find_first_min__(self, data):
+    #     current_min = 999999999999
+    #     for i in range(0, len(data)):
+    #         if data[i] <= current_min:
+    #             current_min = data[i]
+    #         else:
+    #             return i - 1
+    #
+    # def __find_last_min__(self, data):
+    #     current_min = 999999999999
+    #     for i in range(-len(data) + 1, 0):
+    #         if data[-i] <= current_min:
+    #             current_min = data[-i]
+    #         else:
+    #             return -i + 1
+    #
 
 
 
@@ -295,7 +299,7 @@ class FeatureGenerator:
 
         # Initialize output array
         inner_features = []
-        inner_features = self.__inner_peak_picking__(distance, data).tolist()
+        # inner_features = self.__inner_peak_picking__(distance, data).tolist()
         # Compute distances between the intermediate peaks
         peak_distances = self.__get_intermediate_peak_distances__(distance, data)
 
@@ -309,13 +313,13 @@ class FeatureGenerator:
             if len(sub_data) != 0:
 
                 # Compute wavelet features
-                crest = np.max(sub_data)
-                trough = np.min(sub_data)
-                mean = np.mean(sub_data)
-                std = np.std(sub_data)
+                crest = np.nanmax(sub_data)
+                trough = np.nanmin(sub_data)
+                mean = np.nanmean(sub_data)
+                std = np.nanstd(sub_data)
                 wavelength = distance
                 wave_height = crest - trough
-                rms = np.sqrt(np.mean([i ** 2 for i in sub_data]))
+                rms = np.sqrt(np.nanmean([i ** 2 for i in sub_data]))
                 skewness = skew(sub_data)
 
                 inner_features.append(crest)
@@ -397,6 +401,7 @@ class FeatureGenerator:
         peakfinder = PeakFinder(data, outliers)
         # peakfinder.plot("preprocessed")
         self.r_peaks, self.data = peakfinder.get_peaks_data()
+        peakfinder.peak_plot("All Peaks")
         # peakfinder.plot("rpeaks")
 
         """

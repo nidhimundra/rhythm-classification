@@ -4,6 +4,7 @@
 
 import copy
 
+import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import pyplot
 from sklearn.cluster import KMeans
@@ -13,12 +14,18 @@ from peakutils.plot import plot as pplot
 
 
 class PeakFinder:
-    def __init__(self, data, outliers):
+    def __init__(self, data, outliers, thres=0.46, min_dist=30):
         """
         Initialize the wave data, Find R peaks and Remove outliers
          
         :param data: Wave data points 
         """
+        # threshold for peak picking
+        self.thres = thres
+
+        # Minimum distance between peaks for peak picking
+        self.min_dist = min_dist
+
 
         self.data = data
 
@@ -36,6 +43,14 @@ class PeakFinder:
 
         # Detect and remove outliers
         self.__outlier_removal__()
+
+        self.s_peak = []
+        self.q_peak = []
+        self.t_peak = []
+        self.u_peak = []
+
+        self.__inner_peak_picking__()
+
 
     def __flip_data__(self):
         """
@@ -64,7 +79,7 @@ class PeakFinder:
         """
         Detect peaks using peakutils library
         """
-        self.peaks = peakutils.indexes(self.data, thres=0.46, min_dist=30)
+        self.peaks = peakutils.indexes(self.data, thres=self.thres, min_dist=self.min_dist)
 
     def __outlier_removal__(self):
         """
@@ -454,6 +469,118 @@ class PeakFinder:
 
         pyplot.title(title)
 
+    def __get_inbetween_peaks__(self, data):
+
+        length = len(data)
+        left_max = self.__inbetween_peak__(data, 0, int(length / 2))
+        right_max = self.__inbetween_peak__(data, int(length / 2), length)
+        return left_max, right_max
+
+    def __inbetween_peak__(self, data, left, right):
+
+        argmax = 0
+        max = -999999
+        current_max = -999999
+        for i in range(left, right):
+            if data[i] >= current_max:
+                current_max = data[i]
+            elif data[i] < current_max:
+                if current_max > max:
+                    max = current_max
+                    argmax = i - 1
+                current_max = data[i]
+        if argmax == 0:
+            return int(left + (right - left) / 2)
+        return argmax
+
+    def __delete_r_peaks(self, data):
+        first_min = self.__find_first_min__(data)
+        last_min = self.__find_last_min__(data)
+        return data[first_min:last_min], first_min, last_min
+
+    def __find_first_min__(self, data):
+        current_min = 999999999999
+        for i in range(0, len(data)):
+            if data[i] <= current_min:
+                current_min = data[i]
+            else:
+                return i - 1
+
+    def __find_last_min__(self, data):
+        current_min = 999999999999
+        for i in range(-len(data) + 1, 0):
+            if data[-i] <= current_min:
+                current_min = data[-i]
+            else:
+                return -i + 1
+
+    def peak_plot(self, title):
+
+        """
+        Plots the original data with the peaks that were identified
+
+        Parameters
+        ----------
+        x : array-like
+            Data on the x-axis
+        y : array-like
+            Data on the y-axis
+        ind : array-like
+            Indexes of the identified peaks
+        """
+
+        pyplot.close("all")
+
+        x = self.data
+
+        # Data to be plotted
+        y = np.linspace(0, len(x) - 1, len(x))
+
+        r_peaks = self.r_peaks
+        s_peak = self.s_peak.astype(int).tolist()
+        q_peak = self.q_peak.astype(int).tolist()
+        t_peak = self.t_peak.astype(int).tolist()
+        u_peak = self.u_peak.astype(int).tolist()
+
+        pyplot.figure(figsize=(10, 6))
+
+        # # Plot using pplot library
+        # pplot(y, x, self.r_peaks)
+        plt.plot(y, x, '--')
+        plt.plot(y[r_peaks], x[r_peaks], 'r+', ms=5, mew=2,
+                 label='{} peaks'.format(len(r_peaks)))
+
+        plt.plot(y[s_peak], x[s_peak], 'g+', ms=5, mew=2,
+                 label='{} peaks'.format(len(s_peak)))
+
+        plt.plot(y[q_peak], x[q_peak], 'b+', ms=5, mew=2,
+                 label='{} peaks'.format(len(q_peak)))
+
+        plt.plot(y[t_peak], x[t_peak], 'y+', ms=5, mew=2,
+                 label='{} peaks'.format(len(t_peak)))
+
+        plt.plot(y[u_peak], x[u_peak], 'k+', ms=5, mew=2,
+                 label='{} peaks'.format(len(u_peak)))
+        plt.legend()
+
+        pyplot.title(title)
+
+    def __inner_peak_picking__(self):
+        """
+          loop through the found r_peaks and find the other peaks between two
+          r-peaks
+          :return:
+        """
+        for i in range(0, len(self.r_peaks) - 1):
+            data = self.data[self.r_peaks[i]:self.r_peaks[i + 1]]
+            data = np.array(data)
+            data_snip = copy.deepcopy(data)
+            data_snip, s_peak, q_peak = self.__delete_r_peaks(data_snip)
+            t_peak, u_peak = self.__get_inbetween_peaks__(data_snip)
+            self.s_peak = np.append(self.s_peak, s_peak + self.r_peaks[i])
+            self.q_peak = np.append(self.q_peak, q_peak + self.r_peaks[i])
+            self.t_peak = np.append(self.t_peak, t_peak + self.r_peaks[i] + s_peak)
+            self.u_peak = np.append(self.u_peak, u_peak + self.r_peaks[i] + s_peak)
 
 def plot(title, data, peaks=[0]):
     """
