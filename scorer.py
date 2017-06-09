@@ -70,7 +70,7 @@ class Scorer:
         # Dictionary to store count of correctly predicted labels
         self.total_correct_prediction_count = {0: 0, 1: 0, 2: 0, 3: 0}
 
-        for i in xrange(len(predicted_y)):
+        for i in range(0, len(predicted_y)):
             # Extract predicted and actual labels for ith record
             predicted_label = predicted_y[i]
             actual_label = actual_y[i]

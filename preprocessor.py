@@ -2,7 +2,6 @@
  Created by Jonas Pfeiffer on 26/04/17.
 """
 
-import cPickle
 import os.path
 import pickle
 from operator import itemgetter
@@ -120,13 +119,13 @@ class Preprocessor:
 
         # Else train the model
         else:
-            print "optimizing middle"
+            print("optimizing middle")
             all_labels = self.get_all_labels()
 
             features = []
             labels = []
             # Loop through all the labeled files
-            for filename, values in all_labels.iteritems():
+            for filename, values in list(all_labels.items()):
                 mat1 = scipy.io.loadmat('training_data/' + filename)
 
                 # get the ECG
@@ -148,7 +147,7 @@ class Preprocessor:
 
             # store the model in pickle file and return the trained model
             with open('pickle_files/middle_outlier_model.pickle', 'wb') as handle:
-                cPickle.dump(classifier, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+                pickle.dump(classifier, handle, protocol=pickle.HIGHEST_PROTOCOL)
             return classifier
 
     def get_side_outlier_model(self, left, side):
@@ -158,12 +157,12 @@ class Preprocessor:
                 return pickle.load(handle)
 
         else:
-            print "optimizing side: " + side
+            print(("optimizing side: " + side))
             all_labels = self.get_all_labels()
 
             features = []
             labels = []
-            for filename, values in all_labels.iteritems():
+            for filename, values in list(all_labels.items()):
                 mat1 = scipy.io.loadmat('training_data/' + filename)
                 y = mat1['val'][0]
                 feat, left_part = self.get_features_outliers(y, left=left)
@@ -182,7 +181,7 @@ class Preprocessor:
             classifier.fit(features, labels)
 
             with open("pickle_files/" + side + "_outlier_model.pickle", 'wb') as handle:
-                cPickle.dump(classifier, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+                pickle.dump(classifier, handle, protocol=pickle.HIGHEST_PROTOCOL)
             return classifier
 
     def get_flipping_model(self):
@@ -192,12 +191,12 @@ class Preprocessor:
                 return pickle.load(handle)
 
         else:
-            print "optimizing flipping"
+            print("optimizing flipping")
             all_labels = self.get_all_labels()
 
             features = []
             labels = []
-            for filename, values in all_labels.iteritems():
+            for filename, values in list(all_labels.items()):
                 mat1 = scipy.io.loadmat('training_data/' + filename)
                 y = mat1['val'][0]
                 feat, base = self.get_features_flipping(y)
@@ -211,7 +210,7 @@ class Preprocessor:
             classifier.fit(features, labels)
 
             with open('pickle_files/flipping_model.pickle', 'wb') as handle:
-                cPickle.dump(classifier, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+                pickle.dump(classifier, handle, protocol=pickle.HIGHEST_PROTOCOL)
             return classifier
 
     def delete_parts(self, to_delete):
@@ -326,7 +325,7 @@ class Preprocessor:
         delete_points = None
 
         # evaluate which cluster needs to be added to the to_delete list.
-        for key, value in stats.iteritems():
+        for key, value in list(stats.items()):
 
             # if one cluster has less parts included we assume that this is the outlier set, because we are
             # hoping that there are always more non outlier areas than outliers

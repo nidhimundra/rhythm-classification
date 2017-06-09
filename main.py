@@ -19,4 +19,4 @@ clf.fit(Xtr, Ytr, file_names)
 
 # Predict the accuracy score of the test output
 Xte, Yte, file_names = data_reader.fetch_data_and_labels(path='testing_data')
-print "Accuracy: ", clf.score(Xte, Yte, file_names)
+print(("Accuracy: ", clf.score(Xte, Yte, file_names)))

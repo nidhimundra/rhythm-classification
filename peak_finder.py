@@ -126,7 +126,7 @@ class PeakFinder:
             stats[prediction[i]]["count"] += 1
             stats[prediction[i]]["values"].append(all_peak_values[i])
 
-        for key, value in stats.iteritems():
+        for key, value in list(stats.items()):
             # Compute standard deviation and mean of the values and cluster centers
             stats[key]["std"] = np.std(value["values"])
             stats[key]["mean"] = kmeans.cluster_centers_[key]
@@ -174,7 +174,7 @@ class PeakFinder:
                 # Compute stats for the clusters
                 stats = self.__get_cluster_stats__(all_peaks_values, x, k)
 
-                for key, value in stats.iteritems():
+                for key, value in list(stats.items()):
 
                     # if the counts of the intermediate cluster is greater than 1/2k and the avg value in the cluster is
                     # higher than the one previously found and the standard deviation is at least 20% better then
@@ -188,7 +188,7 @@ class PeakFinder:
 
 
         except:
-            print "to less peaks to cluster"
+            print("to less peaks to cluster")
 
         outliers = [0]
         other_peaks = []
@@ -407,7 +407,7 @@ class PeakFinder:
                 self.data[val_it] = new_r
 
                 # delete the range of one R-Peak to the next from the dataset
-                self.data = np.delete(self.data, range(val_it + 1, val_it_next + 1))
+                self.data = np.delete(self.data, list(range(val_it + 1, val_it_next + 1)))
 
                 # Remove the next R peak from the R_peaks and step one back for indexes of R-Peaks
                 # because there might be other outliers in this interval.
@@ -577,10 +577,22 @@ class PeakFinder:
             data_snip = copy.deepcopy(data)
             data_snip, s_peak, q_peak = self.__delete_r_peaks(data_snip)
             t_peak, u_peak = self.__get_inbetween_peaks__(data_snip)
-            self.s_peak = np.append(self.s_peak, s_peak + self.r_peaks[i])
-            self.q_peak = np.append(self.q_peak, q_peak + self.r_peaks[i])
-            self.t_peak = np.append(self.t_peak, t_peak + self.r_peaks[i] + s_peak)
-            self.u_peak = np.append(self.u_peak, u_peak + self.r_peaks[i] + s_peak)
+            try:
+                self.s_peak = np.append(self.s_peak, s_peak + self.r_peaks[i])
+            except:
+                pass
+            try:
+                self.q_peak = np.append(self.q_peak, q_peak + self.r_peaks[i])
+            except:
+                pass
+            try:
+                self.t_peak = np.append(self.t_peak, t_peak + self.r_peaks[i] + s_peak)
+            except:
+                pass
+            try:
+                self.u_peak = np.append(self.u_peak, u_peak + self.r_peaks[i] + s_peak)
+            except:
+                pass
 
 def plot(title, data, peaks=[0]):
     """

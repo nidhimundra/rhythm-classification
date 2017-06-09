@@ -2,9 +2,9 @@
  Created by Nidhi Mundra on 25/04/17.
 """
 
-import cPickle
 import gc
 import os
+import pickle
 
 import numpy as np
 from sklearn.ensemble import AdaBoostClassifier, RandomForestClassifier
@@ -187,16 +187,16 @@ class ECGClassifier:
         if os.path.isfile("pickle_files/" + prefix + "_peak_data.pickle"):
             # Fetch data points
             with open("pickle_files/" + prefix + "_peak_data.pickle", "rb") as handle:
-                peak_features = cPickle.load(handle)
+                peak_features = pickle.load(handle)
 
             with open("pickle_files/" + prefix + "_point_data.pickle", "rb") as handle:
-                point_features = cPickle.load(handle)
+                point_features = pickle.load(handle)
 
             with open("pickle_files/" + prefix + "_peak_indices.pickle", "rb") as handle:
-                peak_indices = cPickle.load(handle)
+                peak_indices = pickle.load(handle)
 
             with open("pickle_files/" + prefix + "_point_indices.pickle", "rb") as handle:
-                point_indices = cPickle.load(handle)
+                point_indices = pickle.load(handle)
             peak_features = self.__replace_missing_values__(peak_features, "average")
             return [peak_features, peak_indices, point_features, point_indices]
 
@@ -210,7 +210,7 @@ class ECGClassifier:
         for i in range(0, len(X)):
             data = X[i]
 
-            print filenames[i]
+            print((filenames[i]))
             # pyplot.close("all")
             # peakfinder = ([], [])
             # pre.plot("original", data)
@@ -231,22 +231,22 @@ class ECGClassifier:
         # Store the data in pickle files
         gc.disable()
         with open("pickle_files/" + prefix + '_peak_data.pickle', 'wb') as handle:
-            cPickle.dump(peak_features, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+            pickle.dump(peak_features, handle, protocol=pickle.HIGHEST_PROTOCOL)
         gc.enable()
 
         gc.disable()
         with open("pickle_files/" + prefix + '_point_data.pickle', 'wb') as handle:
-            cPickle.dump(point_features, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+            pickle.dump(point_features, handle, protocol=pickle.HIGHEST_PROTOCOL)
         gc.enable()
 
         gc.disable()
         with open("pickle_files/" + prefix + '_peak_indices.pickle', 'wb') as handle:
-            cPickle.dump(peak_indices, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+            pickle.dump(peak_indices, handle, protocol=pickle.HIGHEST_PROTOCOL)
         gc.enable()
 
         gc.disable()
         with open("pickle_files/" + prefix + '_point_indices.pickle', 'wb') as handle:
-            cPickle.dump(point_indices, handle, protocol=cPickle.HIGHEST_PROTOCOL)
+            pickle.dump(point_indices, handle, protocol=pickle.HIGHEST_PROTOCOL)
         gc.enable()
 
         return [peak_features, peak_indices, point_features, point_indices]

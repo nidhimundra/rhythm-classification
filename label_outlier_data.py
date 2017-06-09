@@ -43,8 +43,8 @@ for filename in os.listdir(dir):
             pyplot.title('outliers')
             pyplot.show()
 
-            var = raw_input("Please enter something: ")
-            print "you entered", var
+            var = eval(input("Please enter something: "))
+            print(("you entered", var))
 
             var = var.split(",")
 
